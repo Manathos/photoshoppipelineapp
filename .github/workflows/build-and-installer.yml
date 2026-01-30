@@ -24,7 +24,11 @@ jobs:
         run: dotnet build PhotoshopPipelineApp/PhotoshopPipelineApp.csproj -c Release -r win-x64 --no-restore
 
       - name: Publish (self-contained win-x64)
-        run: dotnet publish PhotoshopPipelineApp/PhotoshopPipelineApp.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o publish --no-build
+        run: dotnet publish PhotoshopPipelineApp/PhotoshopPipelineApp.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o publish
+
+      - name: Verify self-contained output
+        run: |
+          if (-not (Test-Path "publish\hostfxr.dll")) { throw "Publish folder missing hostfxr.dll - not self-contained" }
 
       - name: Create zip artifact
         run: |

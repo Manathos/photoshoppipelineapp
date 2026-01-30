@@ -11,6 +11,10 @@
     <AssemblyName>PhotoshopPipelineApp</AssemblyName>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="ModernWpfUI" Version="0.9.6" />
   </ItemGroup>
