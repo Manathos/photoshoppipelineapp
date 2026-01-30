@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using PhotoshopPipelineApp.Services;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace PhotoshopPipelineApp.Views;
 

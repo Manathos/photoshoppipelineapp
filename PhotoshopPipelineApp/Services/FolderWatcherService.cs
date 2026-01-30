@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.IO;
+using Timer = System.Threading.Timer;
 
 namespace PhotoshopPipelineApp.Services;
 
