@@ -1,0 +1,60 @@
+<UserControl x:Class="PhotoshopPipelineApp.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.modernwpf.com/2019">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+        <StackPanel>
+            <TextBlock Text="Settings" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,16"/>
+            <Border Margin="0,0,0,16" Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="#404040" Background="#2D2D2D">
+                <StackPanel>
+                    <TextBlock Text="Watch folder (input)" Margin="0,0,0,4"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="WatchFolderBox" Margin="0,0,8,0"/>
+                        <Button Grid.Column="1" Content="Browse…" Click="BrowseWatchFolder_Click"/>
+                    </Grid>
+                    <TextBlock Text="Output folder" Margin="0,12,0,4"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="OutputFolderBox" Margin="0,0,8,0"/>
+                        <Button Grid.Column="1" Content="Browse…" Click="BrowseOutputFolder_Click"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+            <Border Margin="0,0,0,16" Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="#404040" Background="#2D2D2D">
+                <StackPanel>
+                    <TextBlock Text="Photoshop action" Margin="0,0,0,8"/>
+                    <TextBlock Text="Action set name" Margin="0,0,0,4"/>
+                    <TextBox x:Name="ActionSetNameBox" Margin="0,0,0,8"/>
+                    <TextBlock Text="Action name" Margin="0,0,0,4"/>
+                    <TextBox x:Name="ActionNameBox" Margin="0,0,0,8"/>
+                </StackPanel>
+            </Border>
+            <Border Margin="0,0,0,16" Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="#404040" Background="#2D2D2D">
+                <StackPanel>
+                    <TextBlock Text="Allowed extensions (e.g. *.jpg, *.png)" Margin="0,0,0,4"/>
+                    <TextBox x:Name="AllowedExtensionsBox" Margin="0,0,0,8"/>
+                    <TextBlock Text="Required file names (one per line, in output folder)" Margin="0,0,0,4"/>
+                    <TextBox x:Name="RequiredFileNamesBox" AcceptsReturn="True" TextWrapping="Wrap" Height="80" Margin="0,0,0,8"/>
+                    <TextBlock Text="Required files timeout (seconds)" Margin="0,0,0,4"/>
+                    <TextBox x:Name="TimeoutBox" Margin="0,0,0,8"/>
+                </StackPanel>
+            </Border>
+            <Border Margin="0,0,0,16" Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="#404040" Background="#2D2D2D">
+                <StackPanel>
+                    <TextBlock Text="Follow-up step" Margin="0,0,0,4"/>
+                    <ComboBox x:Name="FollowUpTypeCombo" SelectedIndex="0">
+                        <ComboBoxItem Content="None (placeholder)"/>
+                    </ComboBox>
+                </StackPanel>
+            </Border>
+            <Button Content="Save settings" Click="SaveButton_Click" HorizontalAlignment="Left"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

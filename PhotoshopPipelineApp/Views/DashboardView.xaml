@@ -1,0 +1,26 @@
+<UserControl x:Class="PhotoshopPipelineApp.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.modernwpf.com/2019">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+        <StackPanel>
+            <TextBlock Text="Dashboard" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,16"/>
+            <Border Margin="0,0,0,16" Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="#404040" Background="#2D2D2D">
+                <StackPanel>
+                    <TextBlock x:Name="StatusText" Text="Status: Idle" FontSize="16" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="LastFileText" Text="Last file: —" Opacity="0.8" Margin="0,0,0,16"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="StartButton" Content="Start pipeline" Click="StartButton_Click" Margin="0,0,12,0"/>
+                        <Button x:Name="StopButton" Content="Stop pipeline" Click="StopButton_Click" IsEnabled="False"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            <TextBlock Text="Log" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <Border BorderBrush="#404040" BorderThickness="1" CornerRadius="4" Padding="12" Background="#2D2D2D">
+                <ScrollViewer x:Name="LogScroll" VerticalScrollBarVisibility="Auto" MaxHeight="320">
+                    <TextBox x:Name="LogTextBox" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0" Background="Transparent" FontFamily="Consolas" FontSize="12" MinHeight="200"/>
+                </ScrollViewer>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
