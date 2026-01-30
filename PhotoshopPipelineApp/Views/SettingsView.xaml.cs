@@ -80,6 +80,6 @@ public partial class SettingsView : UserControl
     private void SaveButton_Click(object sender, RoutedEventArgs e)
     {
         SaveToConfig();
-        MessageBox.Show("Settings saved.", "Photoshop Pipeline", MessageBoxButton.OK, MessageBoxImage.Information);
+        System.Windows.MessageBox.Show("Settings saved.", "Photoshop Pipeline", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
     }
 }
