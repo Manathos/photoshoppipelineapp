@@ -2,24 +2,25 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.modernwpf.com/2019">
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="{StaticResource PagePadding}">
         <StackPanel>
-            <TextBlock Text="Dashboard" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,16"/>
-            <Border Margin="0,0,0,16" Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="#404040" Background="#2D2D2D">
+            <TextBlock Text="Dashboard" FontSize="{StaticResource PageTitleFontSize}" FontWeight="SemiBold" Margin="0,0,0,12"/>
+            <Border Margin="0,0,0,12" Padding="{StaticResource CardPadding}" CornerRadius="8" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardBackground}">
                 <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                        <Button x:Name="StartButton" Content="Start pipeline" Click="StartButton_Click" Margin="0,0,12,0"/>
-                        <Button x:Name="StopButton" Content="Stop pipeline" Click="StopButton_Click" IsEnabled="False"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <Button x:Name="StartButton" Content="Start pipeline" Click="StartButton_Click" Margin="0,0,12,0" Style="{StaticResource ButtonStyle}"/>
+                        <Button x:Name="StopButton" Content="Stop pipeline" Click="StopButton_Click" IsEnabled="False" Margin="0,0,12,0" Style="{StaticResource ButtonStyle}"/>
+                        <Button x:Name="ViewOpenAIResponseButton" Content="View last OpenAI response" Click="ViewOpenAIResponseButton_Click" Style="{StaticResource ButtonStyle}"/>
                     </StackPanel>
-                    <TextBlock x:Name="StatusSummaryText" Text="Status: Idle" FontSize="14" Opacity="0.9" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="StatusSummaryText" Text="Status: Idle" FontSize="{StaticResource SectionHeaderFontSize}" Opacity="0.9" Margin="0,0,0,8"/>
                     <ItemsControl x:Name="QueueStatusItems">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Margin="0,0,0,4" Padding="8" CornerRadius="4" BorderThickness="1" BorderBrush="#404040" Background="#252525">
+                                <Border Margin="0,0,0,4" Padding="8" CornerRadius="4" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardInnerBackground}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding QueueName}" FontWeight="SemiBold" MinWidth="120"/>
-                                        <TextBlock Text="{Binding Status}" Margin="8,0,0,0" Opacity="0.9"/>
-                                        <TextBlock Text="{Binding LastFileDisplay}" Margin="8,0,0,0" Opacity="0.8" FontSize="12"/>
+                                        <TextBlock Text="{Binding QueueName}" FontWeight="SemiBold" MinWidth="120" FontSize="{StaticResource BodyFontSize}"/>
+                                        <TextBlock Text="{Binding Status}" Margin="8,0,0,0" Opacity="0.9" FontSize="{StaticResource BodyFontSize}"/>
+                                        <TextBlock Text="{Binding LastFileDisplay}" Margin="8,0,0,0" Opacity="0.8" FontSize="{StaticResource BodyFontSize}"/>
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>
@@ -27,12 +28,12 @@
                     </ItemsControl>
                 </StackPanel>
             </Border>
-            <TextBlock Text="Drop zones" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <TextBlock Text="Drop zones" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" Margin="0,0,0,8"/>
             <ItemsControl x:Name="DropZonesItems"/>
-            <TextBlock Text="Log" FontSize="18" FontWeight="SemiBold" Margin="0,16,0,8"/>
-            <Border BorderBrush="#404040" BorderThickness="1" CornerRadius="4" Padding="12" Background="#2D2D2D">
+            <TextBlock Text="Log" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" Margin="0,12,0,8"/>
+            <Border BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="{StaticResource CardPadding}" Background="{StaticResource CardBackground}">
                 <ScrollViewer x:Name="LogScroll" VerticalScrollBarVisibility="Auto" MaxHeight="320">
-                    <TextBox x:Name="LogTextBox" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0" Background="Transparent" FontFamily="Consolas" FontSize="12" MinHeight="200"/>
+                    <TextBox x:Name="LogTextBox" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0" Background="Transparent" FontFamily="Consolas" FontSize="{StaticResource BodyFontSize}" MinHeight="200"/>
                 </ScrollViewer>
             </Border>
         </StackPanel>

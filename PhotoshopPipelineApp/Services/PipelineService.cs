@@ -36,6 +36,9 @@ public class PipelineService : IDisposable
 
     public void Log(string message) => LogMessage?.Invoke(this, message);
 
+    public string LastOpenAIResponseQueueName { get; private set; } = string.Empty;
+    public OpenAIMetadata? LastOpenAIResponse { get; private set; }
+
     public PipelineService(IPhotoshopService photoshopService, ConfigService configService)
     {
         _photoshopService = photoshopService;
@@ -156,6 +159,12 @@ public class PipelineService : IDisposable
                     if (!preSettings.ContainsKey("ApiKey") && !string.IsNullOrWhiteSpace(_config.OpenAIApiKey))
                         preSettings["ApiKey"] = _config.OpenAIApiKey;
                     await preStep.ExecuteAsync(context, preSettings).ConfigureAwait(false);
+                    if (context.OpenAIMetadata != null)
+                    {
+                        LastOpenAIResponseQueueName = queueName;
+                        LastOpenAIResponse = context.OpenAIMetadata;
+                        Log(queueIndex, $"OpenAI: title=\"{context.OpenAIMetadata.Title}\" tags=[{string.Join(", ", context.OpenAIMetadata.Tags)}]");
+                    }
                 }
 
                 _photoshopService.OpenAndRunAction(imagePath, queue.ActionSetName, queue.ActionName);
@@ -177,7 +186,7 @@ public class PipelineService : IDisposable
                 else
                 {
                     SetQueueStatus(queueIndex, PipelineStatus.RunningStep, imagePath);
-                    var postStep = PostStepResolver?.Invoke(queue.PostStepType) ?? new PlaceholderStep(msg => LogMessage?.Invoke(this, msg));
+                    var postStep = PostStepResolver?.Invoke(queue.PostStepType) ?? new PlaceholderStep(msg => Log(msg));
                     var postSettings = new Dictionary<string, string>(queue.PostStepSettings, StringComparer.OrdinalIgnoreCase);
                     if (!postSettings.ContainsKey("AccessToken") && !string.IsNullOrWhiteSpace(_config.ShopifyAccessToken))
                         postSettings["AccessToken"] = _config.ShopifyAccessToken;

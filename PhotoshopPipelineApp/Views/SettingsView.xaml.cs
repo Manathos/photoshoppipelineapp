@@ -102,6 +102,7 @@ public partial class SettingsView : UserControl
 
         PreStepTypeCombo.SelectedIndex = string.Equals(q.PreStepType, "OpenAI", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
         PreStepOpenAIKeyBox.Password = q.PreStepSettings != null && q.PreStepSettings.TryGetValue("ApiKey", out var key) ? key : "";
+        PreStepOpenAIPromptBox.Text = q.PreStepSettings != null && q.PreStepSettings.TryGetValue("Prompt", out var prompt) ? prompt : "";
 
         PostStepTypeCombo.SelectedIndex = string.Equals(q.PostStepType, "Shopify", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
         if (q.PostStepSettings != null)
@@ -146,8 +147,16 @@ public partial class SettingsView : UserControl
 
         q.PreStepType = (PreStepTypeCombo.SelectedItem as ComboBoxItem)?.Tag as string ?? "None";
         q.PreStepSettings ??= new Dictionary<string, string>();
-        if (q.PreStepType == "OpenAI" && !string.IsNullOrEmpty(PreStepOpenAIKeyBox.Password))
-            q.PreStepSettings["ApiKey"] = PreStepOpenAIKeyBox.Password;
+        if (q.PreStepType == "OpenAI")
+        {
+            if (!string.IsNullOrEmpty(PreStepOpenAIKeyBox.Password))
+                q.PreStepSettings["ApiKey"] = PreStepOpenAIKeyBox.Password;
+            var promptText = PreStepOpenAIPromptBox.Text?.Trim() ?? "";
+            if (!string.IsNullOrEmpty(promptText))
+                q.PreStepSettings["Prompt"] = promptText;
+            else
+                q.PreStepSettings.Remove("Prompt");
+        }
 
         q.PostStepType = (PostStepTypeCombo.SelectedItem as ComboBoxItem)?.Tag as string ?? "None";
         q.PostStepSettings ??= new Dictionary<string, string>();
