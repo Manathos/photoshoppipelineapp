@@ -121,7 +121,7 @@ public partial class DashboardView : UserControl
             {
                 if (string.Equals(ext, "*.*", StringComparison.OrdinalIgnoreCase)) return true;
                 if (!ext.StartsWith("*.")) return false;
-                return fileName.EndsWith(ext.AsSpan(1), StringComparison.OrdinalIgnoreCase);
+                return fileName.EndsWith(ext[1..], StringComparison.OrdinalIgnoreCase);
             });
             if (!matches) continue;
             var dest = Path.Combine(watchPath, fileName);
