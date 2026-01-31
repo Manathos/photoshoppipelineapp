@@ -7,11 +7,14 @@
     <sys:Double x:Key="SmallFontSize" xmlns:sys="clr-namespace:System;assembly=System.Runtime">11</sys:Double>
     <sys:Double x:Key="ButtonFontSize" xmlns:sys="clr-namespace:System;assembly=System.Runtime">13</sys:Double>
 
-    <!-- Spacing -->
-    <Thickness x:Key="PagePadding">16</Thickness>
-    <Thickness x:Key="CardPadding">12</Thickness>
-    <Thickness x:Key="SectionSpacing">12</Thickness>
+    <!-- Spacing (tighter for better flow) -->
+    <Thickness x:Key="PagePadding">12</Thickness>
+    <Thickness x:Key="CardPadding">10</Thickness>
+    <Thickness x:Key="SectionSpacing">10</Thickness>
     <Thickness x:Key="LabelMargin">0,0,0,4</Thickness>
+
+    <!-- Corner radius -->
+    <sys:Double x:Key="CardCornerRadius" xmlns:sys="clr-namespace:System;assembly=System.Runtime">10</sys:Double>
 
     <!-- Layout width constraints -->
     <sys:Double x:Key="MaxContentWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">640</sys:Double>
@@ -19,26 +22,38 @@
     <sys:Double x:Key="DropZoneMinHeight" xmlns:sys="clr-namespace:System;assembly=System.Runtime">44</sys:Double>
     <sys:Double x:Key="InputMaxWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">520</sys:Double>
 
-    <!-- Drop zone brushes -->
+    <!-- Drop zone brushes (semi-transparent) -->
     <SolidColorBrush x:Key="DropZoneIdleBorder" Color="#606060"/>
-    <SolidColorBrush x:Key="DropZoneIdleBackground" Color="#2D2D2D"/>
+    <SolidColorBrush x:Key="DropZoneIdleBackground" Color="#252D2D2D"/>
     <SolidColorBrush x:Key="DropZoneDragOverBorder" Color="#0078D4"/>
-    <SolidColorBrush x:Key="DropZoneDragOverBackground" Color="#1A3A52"/>
+    <SolidColorBrush x:Key="DropZoneDragOverBackground" Color="#301A3A52"/>
 
-    <!-- Card / section -->
-    <SolidColorBrush x:Key="CardBorderBrush" Color="#404040"/>
-    <SolidColorBrush x:Key="CardBackground" Color="#2D2D2D"/>
-    <SolidColorBrush x:Key="CardInnerBackground" Color="#252525"/>
+    <!-- Card / section (semi-transparent, subtler border) -->
+    <SolidColorBrush x:Key="CardBorderBrush" Color="#40FFFFFF"/>
+    <SolidColorBrush x:Key="CardBackground" Color="#252D2D2D"/>
+    <SolidColorBrush x:Key="CardInnerBackground" Color="#1E252525"/>
 
-    <!-- Compact button style with hover (extends theme; only tightens size + optional hover) -->
+    <!-- Compact button style with hover (extends theme; tighter size + optional hover) -->
     <Style x:Key="ButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-        <Setter Property="Padding" Value="8,12"/>
+        <Setter Property="Padding" Value="6,10"/>
         <Setter Property="FontSize" Value="{StaticResource ButtonFontSize}"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Opacity" Value="0.92"/>
             </Trigger>
         </Style.Triggers>
+    </Style>
+
+    <!-- Compact input styles -->
+    <Style x:Key="TextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="FontSize" Value="{StaticResource BodyFontSize}"/>
+        <Setter Property="MinHeight" Value="28"/>
+    </Style>
+    <Style x:Key="PasswordBoxStyle" TargetType="PasswordBox" BasedOn="{StaticResource {x:Type PasswordBox}}">
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="FontSize" Value="{StaticResource BodyFontSize}"/>
+        <Setter Property="MinHeight" Value="28"/>
     </Style>
 
     <!-- Optional: TabItem style for tighter tabs -->
