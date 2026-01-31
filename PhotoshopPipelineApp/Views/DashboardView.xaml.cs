@@ -9,6 +9,8 @@ using PhotoshopPipelineApp.Models;
 using PhotoshopPipelineApp.Services;
 using UserControl = System.Windows.Controls.UserControl;
 using DragEventArgs = System.Windows.DragEventArgs;
+using DataFormats = System.Windows.DataFormats;
+using DragDropEffects = System.Windows.DragDropEffects;
 
 namespace PhotoshopPipelineApp.Views;
 
@@ -61,8 +63,8 @@ public partial class DashboardView : UserControl
                 Padding = new Thickness(16),
                 CornerRadius = new CornerRadius(8),
                 BorderThickness = new Thickness(2),
-                BorderBrush = new SolidColorBrush(Colors.Gray),
-                Background = new SolidColorBrush(Color.FromRgb(0x2D, 0x2D, 0x2D)),
+                BorderBrush = new SolidColorBrush(System.Windows.Media.Colors.Gray),
+                Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x2D, 0x2D, 0x2D)),
                 AllowDrop = true,
                 Tag = (name, watchPath, allowedExts)
             };
@@ -70,8 +72,8 @@ public partial class DashboardView : UserControl
             {
                 Text = $"Drop files here for {name}",
                 FontSize = 14,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                VerticalAlignment = System.Windows.VerticalAlignment.Center
             };
             border.Child = text;
             border.PreviewDragOver += DropZone_PreviewDragOver;
@@ -97,7 +99,7 @@ public partial class DashboardView : UserControl
             return;
         if (string.IsNullOrWhiteSpace(watchPath))
         {
-            _pipeline?.LogMessage?.Invoke(_pipeline, $"[{name}] Cannot drop: watch folder not set. Configure it in Settings.");
+            _pipeline?.Log($"[{name}] Cannot drop: watch folder not set. Configure it in Settings.");
             return;
         }
         try
@@ -106,7 +108,7 @@ public partial class DashboardView : UserControl
         }
         catch (Exception ex)
         {
-            _pipeline?.LogMessage?.Invoke(_pipeline, $"[{name}] Cannot create watch folder: {ex.Message}");
+            _pipeline?.Log($"[{name}] Cannot create watch folder: {ex.Message}");
             return;
         }
         var copied = 0;
@@ -130,11 +132,11 @@ public partial class DashboardView : UserControl
             }
             catch (Exception ex)
             {
-                _pipeline?.LogMessage?.Invoke(_pipeline, $"[{name}] Failed to copy {fileName}: {ex.Message}");
+                _pipeline?.Log($"[{name}] Failed to copy {fileName}: {ex.Message}");
             }
         }
         if (copied > 0)
-            _pipeline?.LogMessage?.Invoke(_pipeline, $"[{name}] Copied {copied} file(s) to watch folder.");
+            _pipeline?.Log($"[{name}] Copied {copied} file(s) to watch folder.");
         e.Handled = true;
     }
 

@@ -34,6 +34,8 @@ public class PipelineService : IDisposable
     public event EventHandler<QueueStatusEventArgs>? QueueStatusChanged;
     public event EventHandler<string>? LogMessage;
 
+    public void Log(string message) => LogMessage?.Invoke(this, message);
+
     public PipelineService(IPhotoshopService photoshopService, ConfigService configService)
     {
         _photoshopService = photoshopService;

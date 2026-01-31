@@ -27,7 +27,7 @@ public partial class MainWindow : Window
         {
             if (string.Equals(type, "Shopify", StringComparison.OrdinalIgnoreCase))
                 return new ShopifyPostStep();
-            return new PlaceholderStep(msg => _pipelineService.LogMessage?.Invoke(_pipelineService, msg));
+            return new PlaceholderStep(msg => _pipelineService.Log(msg));
         };
 
         var dashboard = new DashboardView();

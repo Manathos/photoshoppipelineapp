@@ -247,6 +247,6 @@ public partial class SettingsView : UserControl
         c.OpenAIApiKey = OpenAIKeyBox.Password ?? "";
         c.ShopifyAccessToken = ShopifyTokenBox.Password ?? "";
         _configService.Save(c);
-        MessageBox.Show("Settings saved.", "Photoshop Pipeline", MessageBoxButton.OK, MessageBoxImage.Information);
+        System.Windows.MessageBox.Show("Settings saved.", "Photoshop Pipeline", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
     }
 }
