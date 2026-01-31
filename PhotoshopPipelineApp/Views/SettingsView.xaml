@@ -7,6 +7,30 @@
             <TextBlock Text="Settings" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,16"/>
             <Border Margin="0,0,0,16" Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="#404040" Background="#2D2D2D">
                 <StackPanel>
+                    <TextBlock Text="API keys (optional env override: OPENAI_API_KEY, SHOPIFY_ACCESS_TOKEN)" TextWrapping="Wrap" Margin="0,0,0,8" Opacity="0.9"/>
+                    <TextBlock Text="OpenAI API key" Margin="0,0,0,4"/>
+                    <PasswordBox x:Name="OpenAIKeyBox" Margin="0,0,0,8"/>
+                    <TextBlock Text="Shopify access token" Margin="0,0,0,4"/>
+                    <PasswordBox x:Name="ShopifyTokenBox" Margin="0,0,0,0"/>
+                </StackPanel>
+            </Border>
+            <TextBlock Text="Queues" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <Grid Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <ListBox x:Name="QueueListBox" MinHeight="120" SelectionChanged="QueueListBox_SelectionChanged"
+                         DisplayMemberPath="Name"/>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
+                    <Button x:Name="AddQueueButton" Content="Add queue" Click="AddQueue_Click" Margin="0,0,0,8"/>
+                    <Button x:Name="RemoveQueueButton" Content="Remove" Click="RemoveQueue_Click" IsEnabled="False"/>
+                </StackPanel>
+            </Grid>
+            <Border x:Name="QueueDetailPanel" Margin="0,0,0,16" Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="#404040" Background="#2D2D2D" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="Queue name" Margin="0,0,0,4"/>
+                    <TextBox x:Name="QueueNameBox" Margin="0,0,0,12"/>
                     <TextBlock Text="Watch folder (input)" Margin="0,0,0,4"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -25,33 +49,46 @@
                         <TextBox x:Name="OutputFolderBox" Margin="0,0,8,0"/>
                         <Button Grid.Column="1" Content="Browse…" Click="BrowseOutputFolder_Click"/>
                     </Grid>
-                </StackPanel>
-            </Border>
-            <Border Margin="0,0,0,16" Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="#404040" Background="#2D2D2D">
-                <StackPanel>
-                    <TextBlock Text="Photoshop action" Margin="0,0,0,8"/>
+                    <TextBlock Text="Photoshop action" Margin="0,12,0,8"/>
                     <TextBlock Text="Action set name" Margin="0,0,0,4"/>
                     <TextBox x:Name="ActionSetNameBox" Margin="0,0,0,8"/>
                     <TextBlock Text="Action name" Margin="0,0,0,4"/>
-                    <TextBox x:Name="ActionNameBox" Margin="0,0,0,8"/>
-                </StackPanel>
-            </Border>
-            <Border Margin="0,0,0,16" Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="#404040" Background="#2D2D2D">
-                <StackPanel>
+                    <TextBox x:Name="ActionNameBox" Margin="0,0,0,12"/>
                     <TextBlock Text="Allowed extensions (e.g. *.jpg, *.png)" Margin="0,0,0,4"/>
                     <TextBox x:Name="AllowedExtensionsBox" Margin="0,0,0,8"/>
                     <TextBlock Text="Required file names (one per line, in output folder)" Margin="0,0,0,4"/>
                     <TextBox x:Name="RequiredFileNamesBox" AcceptsReturn="True" TextWrapping="Wrap" Height="80" Margin="0,0,0,8"/>
                     <TextBlock Text="Required files timeout (seconds)" Margin="0,0,0,4"/>
-                    <TextBox x:Name="TimeoutBox" Margin="0,0,0,8"/>
-                </StackPanel>
-            </Border>
-            <Border Margin="0,0,0,16" Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="#404040" Background="#2D2D2D">
-                <StackPanel>
-                    <TextBlock Text="Follow-up step" Margin="0,0,0,4"/>
-                    <ComboBox x:Name="FollowUpTypeCombo" SelectedIndex="0">
-                        <ComboBoxItem Content="None (placeholder)"/>
+                    <TextBox x:Name="TimeoutBox" Margin="0,0,0,16"/>
+                    <TextBlock Text="Pre-step" Margin="0,0,0,4"/>
+                    <ComboBox x:Name="PreStepTypeCombo" Margin="0,0,0,8" SelectionChanged="PreStepTypeCombo_SelectionChanged">
+                        <ComboBoxItem Content="None" Tag="None"/>
+                        <ComboBoxItem Content="OpenAI (image analysis)" Tag="OpenAI"/>
                     </ComboBox>
+                    <StackPanel x:Name="PreStepOpenAIPanel" Visibility="Collapsed" Margin="0,0,0,8">
+                        <TextBlock Text="OpenAI API key (leave blank to use global)" Margin="0,0,0,4"/>
+                        <PasswordBox x:Name="PreStepOpenAIKeyBox" Margin="0,0,0,8"/>
+                    </StackPanel>
+                    <TextBlock Text="Post-step" Margin="0,0,0,4"/>
+                    <ComboBox x:Name="PostStepTypeCombo" Margin="0,0,0,8" SelectionChanged="PostStepTypeCombo_SelectionChanged">
+                        <ComboBoxItem Content="None (placeholder)" Tag="None"/>
+                        <ComboBoxItem Content="Shopify" Tag="Shopify"/>
+                    </ComboBox>
+                    <StackPanel x:Name="PostStepShopifyPanel" Visibility="Collapsed" Margin="0,0,0,8">
+                        <TextBlock Text="Store URL (e.g. mystore.myshopify.com)" Margin="0,0,0,4"/>
+                        <TextBox x:Name="ShopifyStoreUrlBox" Margin="0,0,0,8"/>
+                        <TextBlock Text="Access token (leave blank to use global)" Margin="0,0,0,4"/>
+                        <PasswordBox x:Name="ShopifyAccessTokenBox" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="ShopifyCreateAsDraftCheckBox" Content="Create products as draft" Margin="0,0,0,8"/>
+                        <TextBlock Text="Default price" Margin="0,0,0,4"/>
+                        <TextBox x:Name="ShopifyDefaultPriceBox" Margin="0,0,0,8"/>
+                        <TextBlock Text="SKU pattern (e.g. IMG-{filename} or {timestamp})" Margin="0,0,0,4"/>
+                        <TextBox x:Name="ShopifySkuPatternBox" Margin="0,0,0,8"/>
+                        <TextBlock Text="Variant option name (e.g. Size)" Margin="0,0,0,4"/>
+                        <TextBox x:Name="ShopifyVariantOptionNameBox" Margin="0,0,0,8"/>
+                        <TextBlock Text="Variant option values (comma-separated, e.g. S, M, L)" Margin="0,0,0,4"/>
+                        <TextBox x:Name="ShopifyVariantOptionValuesBox" Margin="0,0,0,0"/>
+                    </StackPanel>
                 </StackPanel>
             </Border>
             <Button Content="Save settings" Click="SaveButton_Click" HorizontalAlignment="Left"/>

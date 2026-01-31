@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.IO;
 using PhotoshopPipelineApp.Models;
 
@@ -17,20 +18,20 @@ public class PipelineService : IDisposable
 {
     private readonly IPhotoshopService _photoshopService;
     private readonly ConfigService _configService;
-    private readonly ConcurrentQueue<string> _queue = new();
+    private readonly List<ConcurrentQueue<string>> _pathQueues = new();
+    private readonly List<QueueStateItem> _queueStates = new();
+    private readonly List<FolderWatcherService?> _watchers = new();
     private readonly object _runLock = new();
-    private FolderWatcherService? _folderWatcher;
-    private IFollowUpStep? _followUpStep;
     private AppConfig _config = new();
-    private volatile PipelineStatus _status = PipelineStatus.Idle;
-    private string _lastProcessedFile = string.Empty;
     private bool _isRunning;
     private bool _disposed;
 
-    public PipelineStatus Status => _status;
-    public string LastProcessedFile => _lastProcessedFile;
+    public Func<string, IPreStep?>? PreStepResolver { get; set; }
+    public Func<string, IPostStep?>? PostStepResolver { get; set; }
 
-    public event EventHandler<PipelineStatus>? StatusChanged;
+    public IReadOnlyList<QueueStateItem> QueueStates => new ReadOnlyCollection<QueueStateItem>(_queueStates);
+
+    public event EventHandler<QueueStatusEventArgs>? QueueStatusChanged;
     public event EventHandler<string>? LogMessage;
 
     public PipelineService(IPhotoshopService photoshopService, ConfigService configService)
@@ -39,26 +40,59 @@ public class PipelineService : IDisposable
         _configService = configService;
     }
 
-    public void SetFollowUpStep(IFollowUpStep step) => _followUpStep = step;
-
     public void Start()
     {
         lock (_runLock)
         {
             if (_isRunning) return;
             _config = _configService.Load();
-            if (string.IsNullOrWhiteSpace(_config.WatchFolderPath))
+            if (_config.Queues.Count == 0)
             {
-                LogMessage?.Invoke(this, "Cannot start: Watch folder is not set.");
+                LogMessage?.Invoke(this, "Cannot start: No queues configured. Add at least one queue in Settings.");
                 return;
             }
-            _followUpStep ??= new PlaceholderStep(msg => LogMessage?.Invoke(this, msg));
-            _folderWatcher = new FolderWatcherService();
-            _folderWatcher.FileDetected += OnFileDetected;
-            _folderWatcher.Start(_config.WatchFolderPath, _config.AllowedExtensions);
+
+            _pathQueues.Clear();
+            _queueStates.Clear();
+            foreach (var w in _watchers)
+            {
+                w?.Dispose();
+            }
+            _watchers.Clear();
+
+            for (var i = 0; i < _config.Queues.Count; i++)
+            {
+                var queue = _config.Queues[i];
+                var queueName = string.IsNullOrWhiteSpace(queue.Name) ? $"Queue {i + 1}" : queue.Name;
+                _pathQueues.Add(new ConcurrentQueue<string>());
+                _queueStates.Add(new QueueStateItem { QueueName = queueName, Status = PipelineStatus.Idle, LastProcessedFile = string.Empty });
+
+                if (string.IsNullOrWhiteSpace(queue.WatchFolderPath))
+                {
+                    LogMessage?.Invoke(this, $"[{queueName}] Watch folder not set; skipping.");
+                    continue;
+                }
+
+                if (!Directory.Exists(queue.WatchFolderPath))
+                {
+                    LogMessage?.Invoke(this, $"[{queueName}] Watch folder does not exist: {queue.WatchFolderPath}");
+                    continue;
+                }
+
+                var watcher = new FolderWatcherService();
+                var capturedIndex = i;
+                watcher.FileDetected += (_, fullPath) =>
+                {
+                    _pathQueues[capturedIndex].Enqueue(fullPath);
+                    _ = ProcessQueueForQueueAsync(capturedIndex);
+                };
+                watcher.Start(queue.WatchFolderPath, queue.AllowedExtensions);
+                _watchers.Add(watcher);
+                SetQueueStatus(capturedIndex, PipelineStatus.Watching, null);
+                LogMessage?.Invoke(this, $"[{queueName}] Watching folder: {queue.WatchFolderPath}");
+            }
+
             _isRunning = true;
-            SetStatus(PipelineStatus.Watching);
-            LogMessage?.Invoke(this, $"Watching folder: {_config.WatchFolderPath}");
         }
     }
 
@@ -67,63 +101,100 @@ public class PipelineService : IDisposable
         lock (_runLock)
         {
             if (!_isRunning) return;
-            if (_folderWatcher != null)
+            foreach (var w in _watchers)
             {
-                _folderWatcher.FileDetected -= OnFileDetected;
-                _folderWatcher.Stop();
-                _folderWatcher.Dispose();
-                _folderWatcher = null;
+                w?.Stop();
+                w?.Dispose();
             }
+            _watchers.Clear();
+            _pathQueues.Clear();
+            for (var i = 0; i < _queueStates.Count; i++)
+                SetQueueStatus(i, PipelineStatus.Idle, null);
             _isRunning = false;
-            SetStatus(PipelineStatus.Idle);
             LogMessage?.Invoke(this, "Stopped watching.");
         }
     }
 
-    private void OnFileDetected(object? sender, string fullPath)
+    private void SetQueueStatus(int queueIndex, PipelineStatus status, string? lastProcessedFile)
     {
-        _queue.Enqueue(fullPath);
-        _ = ProcessQueueAsync();
+        if (queueIndex < 0 || queueIndex >= _queueStates.Count) return;
+        var state = _queueStates[queueIndex];
+        state.Status = status;
+        if (lastProcessedFile != null)
+            state.LastProcessedFile = lastProcessedFile;
+        QueueStatusChanged?.Invoke(this, new QueueStatusEventArgs { QueueName = state.QueueName, Status = status, LastProcessedFile = state.LastProcessedFile });
     }
 
-    private async Task ProcessQueueAsync()
+    private void Log(int queueIndex, string message)
     {
-        while (_queue.TryDequeue(out var imagePath))
+        var queueName = queueIndex >= 0 && queueIndex < _queueStates.Count ? _queueStates[queueIndex].QueueName : "?";
+        LogMessage?.Invoke(this, $"[{queueName}] {message}");
+    }
+
+    private async Task ProcessQueueForQueueAsync(int queueIndex)
+    {
+        if (queueIndex >= _config.Queues.Count || queueIndex >= _pathQueues.Count) return;
+        var queue = _config.Queues[queueIndex];
+        var queueName = _queueStates[queueIndex].QueueName;
+        var pathQueue = _pathQueues[queueIndex];
+
+        while (pathQueue.TryDequeue(out var imagePath))
         {
             if (!_isRunning) break;
+            var context = new PipelineJobContext { InputFilePath = imagePath };
             try
             {
-                SetStatus(PipelineStatus.Processing);
-                _lastProcessedFile = imagePath;
-                LogMessage?.Invoke(this, $"Processing: {Path.GetFileName(imagePath)}");
+                SetQueueStatus(queueIndex, PipelineStatus.Processing, imagePath);
+                Log(queueIndex, $"Processing: {Path.GetFileName(imagePath)}");
 
-                _photoshopService.OpenAndRunAction(imagePath, _config.ActionSetName, _config.ActionName);
-
-                SetStatus(PipelineStatus.Verifying);
-                var verified = await WaitForRequiredFilesAsync(_config.OutputFolderPath, _config.RequiredFileNames, _config.RequiredFilesTimeoutSeconds).ConfigureAwait(false);
-                if (verified.Count < _config.RequiredFileNames.Count)
+                var preStep = PreStepResolver?.Invoke(queue.PreStepType);
+                if (preStep != null && !string.Equals(queue.PreStepType, "None", StringComparison.OrdinalIgnoreCase))
                 {
-                    LogMessage?.Invoke(this, $"Timeout: only {verified.Count}/{_config.RequiredFileNames.Count} required files found.");
+                    var preSettings = new Dictionary<string, string>(queue.PreStepSettings, StringComparer.OrdinalIgnoreCase);
+                    if (!preSettings.ContainsKey("ApiKey") && !string.IsNullOrWhiteSpace(_config.OpenAIApiKey))
+                        preSettings["ApiKey"] = _config.OpenAIApiKey;
+                    await preStep.ExecuteAsync(context, preSettings).ConfigureAwait(false);
+                }
+
+                _photoshopService.OpenAndRunAction(imagePath, queue.ActionSetName, queue.ActionName);
+
+                SetQueueStatus(queueIndex, PipelineStatus.Verifying, imagePath);
+                var verified = await WaitForRequiredFilesAsync(queue.OutputFolderPath, queue.RequiredFileNames, queue.RequiredFilesTimeoutSeconds).ConfigureAwait(false);
+                context = new PipelineJobContext
+                {
+                    InputFilePath = imagePath,
+                    OpenAIMetadata = context.OpenAIMetadata,
+                    VerifiedOutputFiles = verified,
+                    StepData = context.StepData
+                };
+
+                if (verified.Count < queue.RequiredFileNames.Count)
+                {
+                    Log(queueIndex, $"Timeout: only {verified.Count}/{queue.RequiredFileNames.Count} required files found.");
                 }
                 else
                 {
-                    SetStatus(PipelineStatus.RunningStep);
-                    await _followUpStep!.ExecuteAsync(imagePath, _config.OutputFolderPath, verified).ConfigureAwait(false);
+                    SetQueueStatus(queueIndex, PipelineStatus.RunningStep, imagePath);
+                    var postStep = PostStepResolver?.Invoke(queue.PostStepType) ?? new PlaceholderStep(msg => LogMessage?.Invoke(this, msg));
+                    var postSettings = new Dictionary<string, string>(queue.PostStepSettings, StringComparer.OrdinalIgnoreCase);
+                    if (!postSettings.ContainsKey("AccessToken") && !string.IsNullOrWhiteSpace(_config.ShopifyAccessToken))
+                        postSettings["AccessToken"] = _config.ShopifyAccessToken;
+                    await postStep.ExecuteAsync(context, postSettings).ConfigureAwait(false);
                 }
             }
             catch (InvalidOperationException ex) when (ex.Message.Contains("Photoshop") || ex.Message.Contains("not installed") || ex.Message.Contains("not registered"))
             {
-                LogMessage?.Invoke(this, "Photoshop not found or not registered. Please install Adobe Photoshop and ensure it is not script-blocked.");
-                LogMessage?.Invoke(this, $"Details: {ex.Message}");
+                Log(queueIndex, "Photoshop not found or not registered. Please install Adobe Photoshop and ensure it is not script-blocked.");
+                Log(queueIndex, $"Details: {ex.Message}");
             }
             catch (Exception ex)
             {
-                LogMessage?.Invoke(this, $"Error: {ex.Message}");
+                Log(queueIndex, $"Error: {ex.Message}");
             }
             finally
             {
                 if (_isRunning)
-                    SetStatus(PipelineStatus.Watching);
+                    SetQueueStatus(queueIndex, PipelineStatus.Watching, imagePath);
             }
         }
     }
@@ -147,10 +218,11 @@ public class PipelineService : IDisposable
             var files = Directory.GetFiles(outputFolder).Select(Path.GetFileName).Where(f => f != null).Cast<string>().ToList();
             foreach (var name in remaining.ToList())
             {
-                if (files.Any(f => string.Equals(f, name, StringComparison.OrdinalIgnoreCase)))
+                var match = files.FirstOrDefault(f => string.Equals(f, name, StringComparison.OrdinalIgnoreCase));
+                if (match != null)
                 {
                     remaining.Remove(name);
-                    found.Add(name);
+                    found.Add(Path.Combine(outputFolder, match));
                 }
             }
             if (remaining.Count > 0)
@@ -160,11 +232,7 @@ public class PipelineService : IDisposable
         return found;
     }
 
-    private void SetStatus(PipelineStatus status)
-    {
-        _status = status;
-        StatusChanged?.Invoke(this, status);
-    }
+    public bool IsRunning => _isRunning;
 
     public void Dispose()
     {

@@ -1,6 +1,8 @@
+using PhotoshopPipelineApp.Models;
+
 namespace PhotoshopPipelineApp.Services;
 
-public class PlaceholderStep : IFollowUpStep
+public class PlaceholderStep : IPostStep
 {
     private readonly Action<string>? _log;
 
@@ -9,9 +11,9 @@ public class PlaceholderStep : IFollowUpStep
         _log = log;
     }
 
-    public Task ExecuteAsync(string inputPath, string outputFolder, IReadOnlyList<string> verifiedFiles, CancellationToken ct = default)
+    public Task ExecuteAsync(PipelineJobContext context, IReadOnlyDictionary<string, string> settings, CancellationToken ct = default)
     {
-        _log?.Invoke($"[Follow-up] Placeholder step: input={inputPath}, output={outputFolder}, verified files={verifiedFiles.Count}");
+        _log?.Invoke($"[Follow-up] Placeholder step: input={context.InputFilePath}, verified files={context.VerifiedOutputFiles.Count}");
         return Task.CompletedTask;
     }
 }
