@@ -8,6 +8,7 @@ using System.Windows.Media;
 using PhotoshopPipelineApp.Models;
 using PhotoshopPipelineApp.Services;
 using UserControl = System.Windows.Controls.UserControl;
+using DragEventArgs = System.Windows.DragEventArgs;
 
 namespace PhotoshopPipelineApp.Views;
 
