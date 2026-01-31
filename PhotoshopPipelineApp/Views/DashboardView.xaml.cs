@@ -12,6 +12,9 @@ using UserControl = System.Windows.Controls.UserControl;
 using DragEventArgs = System.Windows.DragEventArgs;
 using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
+using Application = System.Windows.Application;
+using Path = System.Windows.Shapes.Path;
+using Brushes = System.Windows.Media.Brushes;
 
 namespace PhotoshopPipelineApp.Views;
 
@@ -192,7 +195,7 @@ public partial class DashboardView : UserControl
         foreach (var src in files)
         {
             if (!File.Exists(src)) continue;
-            var fileName = Path.GetFileName(src);
+            var fileName = System.IO.Path.GetFileName(src);
             if (string.IsNullOrEmpty(fileName)) continue;
             var matches = allowedExts.Any(ext =>
             {
@@ -201,7 +204,7 @@ public partial class DashboardView : UserControl
                 return fileName.EndsWith(ext[1..], StringComparison.OrdinalIgnoreCase);
             });
             if (!matches) continue;
-            var dest = Path.Combine(watchPath, fileName);
+            var dest = System.IO.Path.Combine(watchPath, fileName);
             try
             {
                 File.Copy(src, dest, overwrite: true);
