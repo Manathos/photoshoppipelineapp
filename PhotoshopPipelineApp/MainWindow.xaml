@@ -6,8 +6,8 @@
         Title="Photoshop Pipeline"
         Height="600" Width="900"
         MinHeight="400" MinWidth="700">
-    <Grid>
-        <TabControl x:Name="MainTabControl" Margin="0">
+    <Grid Background="{StaticResource RootBackground}">
+        <TabControl x:Name="MainTabControl" Margin="0" TabStripPlacement="Left">
             <TabItem Header="Dashboard" Style="{StaticResource TabItemStyle}">
                 <ContentControl x:Name="DashboardContent" />
             </TabItem>

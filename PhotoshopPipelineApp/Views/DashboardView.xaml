@@ -1,16 +1,27 @@
 <UserControl x:Class="PhotoshopPipelineApp.Views.DashboardView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:ui="http://schemas.modernwpf.com/2019">
+             xmlns:ui="http://schemas.modernwpf.com/2019"
+             xmlns:views="clr-namespace:PhotoshopPipelineApp.Views">
+    <UserControl.Resources>
+        <views:PathToImageSourceConverter x:Key="PathToImageSourceConverter"/>
+        <views:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="{StaticResource PagePadding}">
         <Grid>
             <StackPanel MaxWidth="{StaticResource MaxContentWidth}" HorizontalAlignment="Center">
-            <TextBlock Text="Dashboard" FontSize="{StaticResource PageTitleFontSize}" FontWeight="SemiBold" Margin="0,0,0,12"/>
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Dashboard" FontSize="{StaticResource PageTitleFontSize}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <ToggleButton x:Name="PipelineToggleButton" Grid.Column="1" Padding="10,4" FontSize="{StaticResource SmallFontSize}" Checked="PipelineToggleButton_Checked" Unchecked="PipelineToggleButton_Unchecked" Style="{StaticResource ButtonStyle}"/>
+            </Grid>
             <Border Margin="0,0,0,12" Padding="{StaticResource CardPadding}" CornerRadius="10" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardBackground}">
                 <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <Button x:Name="StartButton" Content="Start pipeline" Click="StartButton_Click" Margin="0,0,12,0" Style="{StaticResource ButtonStyle}"/>
-                        <Button x:Name="StopButton" Content="Stop pipeline" Click="StopButton_Click" IsEnabled="False" Margin="0,0,12,0" Style="{StaticResource ButtonStyle}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                         <Button x:Name="ViewOpenAIResponseButton" Content="View last OpenAI response" Click="ViewOpenAIResponseButton_Click" Style="{StaticResource ButtonStyle}"/>
                     </StackPanel>
                     <TextBlock x:Name="StatusSummaryText" Text="Status: Idle" FontSize="{StaticResource SectionHeaderFontSize}" Opacity="0.9" Margin="0,0,0,8"/>
@@ -30,7 +41,33 @@
                 </StackPanel>
             </Border>
             <TextBlock Text="Drop zones" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" Margin="0,0,0,8"/>
-            <ItemsControl x:Name="DropZonesItems" HorizontalAlignment="Center"/>
+            <Grid HorizontalAlignment="Center">
+                <TextBlock x:Name="DropZonesPlaceholder" Text="Add queues in Settings to see drop zones." Opacity="0.8" Margin="0,0,0,8" Visibility="Collapsed"/>
+                <ItemsControl x:Name="DropZonesItems" Width="{StaticResource DropZoneWidth}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,0,0,8" AllowDrop="True" MinHeight="{StaticResource DropZoneMinHeight}"
+                                  PreviewDragOver="DropZone_PreviewDragOver" PreviewDrop="DropZone_PreviewDrop" DragLeave="DropZone_DragLeave">
+                                <Border CornerRadius="8" Background="{StaticResource DropZoneIdleBackground}" BorderBrush="{StaticResource DropZoneIdleBorder}" BorderThickness="2" x:Name="DropZoneFillBorder"/>
+                                <Grid Margin="8">
+                                    <Image Stretch="UniformToFill" Source="{Binding CurrentImagePath, Converter={StaticResource PathToImageSourceConverter}}"
+                                           Visibility="{Binding CurrentImagePath, Converter={StaticResource StringToVisibilityConverter}, ConverterParameter=HideWhenEmpty}"/>
+                                    <TextBlock Text="{Binding QueueName, StringFormat='Drop files here for {0}'}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               FontSize="{StaticResource BodyFontSize}"
+                                               Visibility="{Binding CurrentImagePath, Converter={StaticResource StringToVisibilityConverter}, ConverterParameter=ShowWhenEmpty}"/>
+                                    <Border Background="#80000000" CornerRadius="6" Padding="8" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                            Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <ProgressBar IsIndeterminate="True" Width="24" Height="24" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Processing..." FontSize="{StaticResource SmallFontSize}" VerticalAlignment="Center" Foreground="{StaticResource AppForeground}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
             <TextBlock Text="Log" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" Margin="0,12,0,8"/>
             <Border BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="{StaticResource CardPadding}" Background="{StaticResource CardBackground}">
                 <ScrollViewer x:Name="LogScroll" VerticalScrollBarVisibility="Auto" MaxHeight="320">

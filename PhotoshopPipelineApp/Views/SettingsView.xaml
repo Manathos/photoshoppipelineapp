@@ -6,16 +6,19 @@
         <Grid>
             <StackPanel MaxWidth="{StaticResource MaxContentWidth}" HorizontalAlignment="Center">
             <TextBlock Text="Settings" FontSize="{StaticResource PageTitleFontSize}" FontWeight="SemiBold" Margin="0,0,0,12"/>
-            <Border Margin="0,0,0,12" Padding="{StaticResource CardPadding}" CornerRadius="10" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardBackground}">
+            <Expander Header="API keys" IsExpanded="False" Margin="0,0,0,12">
+                <Border Margin="0,8,0,0" Padding="{StaticResource CardPadding}" CornerRadius="10" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardBackground}">
+                    <StackPanel>
+                        <TextBlock Text="API keys (optional env override: OPENAI_API_KEY, SHOPIFY_ACCESS_TOKEN)" TextWrapping="Wrap" Margin="0,0,0,8" Opacity="0.9" FontSize="{StaticResource BodyFontSize}"/>
+                        <TextBlock Text="OpenAI API key" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                        <PasswordBox x:Name="OpenAIKeyBox" Style="{StaticResource PasswordBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
+                        <TextBlock Text="Shopify access token" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                        <PasswordBox x:Name="ShopifyTokenBox" Style="{StaticResource PasswordBoxStyle}" Margin="0,0,0,0" MaxWidth="{StaticResource InputMaxWidth}"/>
+                    </StackPanel>
+                </Border>
+            </Expander>
+            <Expander Header="Queues" IsExpanded="False" Margin="0,0,0,12">
                 <StackPanel>
-                    <TextBlock Text="API keys (optional env override: OPENAI_API_KEY, SHOPIFY_ACCESS_TOKEN)" TextWrapping="Wrap" Margin="0,0,0,8" Opacity="0.9" FontSize="{StaticResource BodyFontSize}"/>
-                    <TextBlock Text="OpenAI API key" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                    <PasswordBox x:Name="OpenAIKeyBox" Style="{StaticResource PasswordBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
-                    <TextBlock Text="Shopify access token" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                    <PasswordBox x:Name="ShopifyTokenBox" Style="{StaticResource PasswordBoxStyle}" Margin="0,0,0,0" MaxWidth="{StaticResource InputMaxWidth}"/>
-                </StackPanel>
-            </Border>
-            <TextBlock Text="Queues" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" Margin="0,0,0,8"/>
             <Grid Margin="0,0,0,12">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -92,8 +95,10 @@
                         <TextBlock Text="Variant option values (comma-separated, e.g. S, M, L)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
                         <TextBox x:Name="ShopifyVariantOptionValuesBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,0" MaxWidth="{StaticResource InputMaxWidth}"/>
                     </StackPanel>
-                </StackPanel>
+                    </StackPanel>
             </Border>
+                </StackPanel>
+            </Expander>
             <Button Content="Save settings" Click="SaveButton_Click" HorizontalAlignment="Left" Style="{StaticResource ButtonStyle}"/>
             </StackPanel>
         </Grid>

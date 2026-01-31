@@ -28,18 +28,33 @@
     <SolidColorBrush x:Key="DropZoneDragOverBorder" Color="#0078D4"/>
     <SolidColorBrush x:Key="DropZoneDragOverBackground" Color="#301A3A52"/>
 
+    <!-- Root / app (dark gray background, white text) -->
+    <SolidColorBrush x:Key="RootBackground" Color="#2D2D2D"/>
+    <SolidColorBrush x:Key="AppForeground" Color="#FFFFFF"/>
+
     <!-- Card / section (semi-transparent, subtler border) -->
     <SolidColorBrush x:Key="CardBorderBrush" Color="#40FFFFFF"/>
     <SolidColorBrush x:Key="CardBackground" Color="#252D2D2D"/>
     <SolidColorBrush x:Key="CardInnerBackground" Color="#1E252525"/>
 
-    <!-- Compact button style with hover (extends theme; tighter size + optional hover) -->
+    <!-- Default text (white for visibility) -->
+    <Style TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource AppForeground}"/>
+    </Style>
+
+    <!-- Electric blue hover border -->
+    <SolidColorBrush x:Key="ButtonHoverBorderBrush" Color="#00BFFF"/>
+
+    <!-- Compact button style with hover (electric blue border on hover) -->
     <Style x:Key="ButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Padding" Value="6,10"/>
         <Setter Property="FontSize" Value="{StaticResource ButtonFontSize}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Opacity" Value="0.92"/>
+                <Setter Property="BorderBrush" Value="{StaticResource ButtonHoverBorderBrush}"/>
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -49,16 +64,37 @@
         <Setter Property="Padding" Value="8,6"/>
         <Setter Property="FontSize" Value="{StaticResource BodyFontSize}"/>
         <Setter Property="MinHeight" Value="28"/>
+        <Setter Property="Foreground" Value="{StaticResource AppForeground}"/>
     </Style>
     <Style x:Key="PasswordBoxStyle" TargetType="PasswordBox" BasedOn="{StaticResource {x:Type PasswordBox}}">
         <Setter Property="Padding" Value="8,6"/>
         <Setter Property="FontSize" Value="{StaticResource BodyFontSize}"/>
         <Setter Property="MinHeight" Value="28"/>
+        <Setter Property="Foreground" Value="{StaticResource AppForeground}"/>
     </Style>
 
-    <!-- Optional: TabItem style for tighter tabs -->
+    <!-- TabItem: translucent button look, left strip -->
     <Style x:Key="TabItemStyle" TargetType="TabItem">
-        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="Padding" Value="12,10"/>
         <Setter Property="FontSize" Value="{StaticResource BodyFontSize}"/>
+        <Setter Property="Foreground" Value="{StaticResource AppForeground}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TabItem">
+                    <Border x:Name="Border" Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}" Margin="0,2">
+                        <ContentPresenter x:Name="ContentSite" ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Border" Property="Background" Value="#35FFFFFF"/>
+                            <Setter TargetName="Border" Property="BorderBrush" Value="#60FFFFFF"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Border" Property="Background" Value="#30FFFFFF"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 </ResourceDictionary>

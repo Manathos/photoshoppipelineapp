@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Shapes;
 using PhotoshopPipelineApp.Models;
 using PhotoshopPipelineApp.Services;
 using UserControl = System.Windows.Controls.UserControl;
@@ -13,8 +13,6 @@ using DragEventArgs = System.Windows.DragEventArgs;
 using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using Application = System.Windows.Application;
-using Path = System.Windows.Shapes.Path;
-using Brushes = System.Windows.Media.Brushes;
 
 namespace PhotoshopPipelineApp.Views;
 
@@ -22,7 +20,7 @@ public partial class DashboardView : UserControl
 {
     private PipelineService? _pipeline;
     private ConfigService? _configService;
-    private List<(string Name, string WatchFolderPath, List<string> AllowedExtensions)> _dropZones = new();
+    private readonly ObservableCollection<DropZoneItem> _dropZoneItems = new();
 
     public DashboardView()
     {
@@ -49,93 +47,22 @@ public partial class DashboardView : UserControl
     {
         if (_configService == null) return;
         var config = _configService.Load();
-        _dropZones.Clear();
+        _dropZoneItems.Clear();
         var queues = config.Queues ?? new List<QueueConfig>();
-        _dropZones = queues.Select((q, i) =>
+        foreach (var (q, i) in queues.Select((q, i) => (q, i)))
         {
             var name = string.IsNullOrWhiteSpace(q.Name) ? $"Queue {i + 1}" : q.Name;
-            var exts = q.AllowedExtensions?.Any() == true ? q.AllowedExtensions : new List<string> { "*.jpg", "*.jpeg", "*.png", "*.psd" };
-            return (Name: name, WatchFolderPath: q.WatchFolderPath ?? "", AllowedExtensions: exts);
-        }).ToList();
-
-        var app = Application.Current;
-        var idleBorder = app?.Resources["DropZoneIdleBorder"] as SolidColorBrush ?? new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x60, 0x60, 0x60));
-        var idleBackground = app?.Resources["DropZoneIdleBackground"] as SolidColorBrush ?? new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x2D, 0x2D, 0x2D));
-        var dragOverBorder = app?.Resources["DropZoneDragOverBorder"] as SolidColorBrush ?? new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x00, 0x78, 0xD4));
-        var dragOverBackground = app?.Resources["DropZoneDragOverBackground"] as SolidColorBrush ?? new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x1A, 0x3A, 0x52));
-        var cardPadding = app?.Resources["CardPadding"] is Thickness t ? t : new Thickness(12);
-        var bodyFontSize = app?.Resources["BodyFontSize"] is double d ? d : 12.0;
-        var dropZoneWidth = app?.Resources["DropZoneWidth"] is double dw ? dw : 280.0;
-        var dropZoneMinHeight = app?.Resources["DropZoneMinHeight"] is double dh ? dh : 44.0;
-
-        var items = new List<FrameworkElement>();
-        foreach (var (name, watchPath, allowedExts) in _dropZones)
-        {
-            var grid = new Grid
+            var exts = q.AllowedExtensions?.Any() == true ? q.AllowedExtensions.ToList() : new List<string> { "*.jpg", "*.jpeg", "*.png", "*.psd" };
+            _dropZoneItems.Add(new DropZoneItem
             {
-                Margin = new Thickness(0, 0, 0, 8),
-                Width = dropZoneWidth,
-                MinHeight = dropZoneMinHeight,
-                AllowDrop = true,
-                Tag = (name, watchPath, allowedExts)
-            };
-            var fillBorder = new Border
-            {
-                CornerRadius = new CornerRadius(8),
-                Background = idleBackground,
-                BorderThickness = new Thickness(0)
-            };
-            var dashedOutline = new Path
-            {
-                Data = CreateRoundedRectGeometry(),
-                Stretch = Stretch.Fill,
-                Stroke = idleBorder,
-                StrokeThickness = 2,
-                StrokeDashArray = new DoubleCollection { 4, 4 },
-                Fill = Brushes.Transparent,
-                Margin = new Thickness(1)
-            };
-            var text = new TextBlock
-            {
-                Text = $"Drop files here for {name}",
-                FontSize = bodyFontSize,
-                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-                VerticalAlignment = System.Windows.VerticalAlignment.Center
-            };
-            var contentBorder = new Border
-            {
-                CornerRadius = new CornerRadius(8),
-                Padding = cardPadding,
-                Background = Brushes.Transparent,
-                Child = text
-            };
-            grid.Children.Add(fillBorder);
-            grid.Children.Add(dashedOutline);
-            grid.Children.Add(contentBorder);
-            grid.Tag = (name, watchPath, allowedExts);
-            grid.PreviewDragOver += DropZone_PreviewDragOver;
-            grid.PreviewDrop += DropZone_PreviewDrop;
-            grid.DragLeave += DropZone_DragLeave;
-            items.Add(grid);
+                QueueName = name,
+                WatchFolderPath = q.WatchFolderPath ?? "",
+                AllowedExtensions = exts
+            });
         }
-        DropZonesItems.ItemsSource = items.Count > 0 ? items : new List<FrameworkElement> { new TextBlock { Text = "Add queues in Settings to see drop zones.", Opacity = 0.8, Margin = new Thickness(0, 0, 0, 8) } };
-    }
-
-    private static Geometry CreateRoundedRectGeometry()
-    {
-        var r = 0.1;
-        var fig = new PathFigure(new System.Windows.Point(r, 0), new List<PathSegment>(), true);
-        fig.Segments.Add(new LineSegment(new System.Windows.Point(1 - r, 0), true));
-        fig.Segments.Add(new ArcSegment(new System.Windows.Point(1, r), new System.Windows.Size(r, r), 0, false, SweepDirection.Clockwise, true));
-        fig.Segments.Add(new LineSegment(new System.Windows.Point(1, 1 - r), true));
-        fig.Segments.Add(new ArcSegment(new System.Windows.Point(1 - r, 1), new System.Windows.Size(r, r), 0, false, SweepDirection.Clockwise, true));
-        fig.Segments.Add(new LineSegment(new System.Windows.Point(r, 1), true));
-        fig.Segments.Add(new ArcSegment(new System.Windows.Point(0, 1 - r), new System.Windows.Size(r, r), 0, false, SweepDirection.Clockwise, true));
-        fig.Segments.Add(new LineSegment(new System.Windows.Point(0, r), true));
-        fig.Segments.Add(new ArcSegment(new System.Windows.Point(r, 0), new System.Windows.Size(r, r), 0, false, SweepDirection.Clockwise, true));
-        var pg = new PathGeometry(new[] { fig });
-        pg.Freeze();
-        return pg;
+        DropZonesItems.ItemsSource = _dropZoneItems;
+        DropZonesPlaceholder.Visibility = _dropZoneItems.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        DropZonesItems.Visibility = _dropZoneItems.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void DropZone_PreviewDragOver(object sender, DragEventArgs e)
@@ -143,16 +70,14 @@ public partial class DashboardView : UserControl
         var hasFiles = e.Data.GetDataPresent(DataFormats.FileDrop);
         e.Effects = hasFiles ? DragDropEffects.Copy : DragDropEffects.None;
         e.Handled = true;
-        if (sender is not Grid grid || grid.Children.Count < 2) return;
+        if (sender is not Grid grid || grid.Children.Count == 0 || grid.Children[0] is not Border fillBorder) return;
         var app = Application.Current;
-        var idleBorder = app?.Resources["DropZoneIdleBorder"] as SolidColorBrush ?? new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x60, 0x60, 0x60));
         var idleBackground = app?.Resources["DropZoneIdleBackground"] as SolidColorBrush ?? new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x2D, 0x2D, 0x2D));
-        var dragOverBorder = app?.Resources["DropZoneDragOverBorder"] as SolidColorBrush ?? new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x00, 0x78, 0xD4));
         var dragOverBackground = app?.Resources["DropZoneDragOverBackground"] as SolidColorBrush ?? new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x1A, 0x3A, 0x52));
-        if (grid.Children[0] is Border fillBorder)
-            fillBorder.Background = hasFiles ? dragOverBackground : idleBackground;
-        if (grid.Children[1] is Path path)
-            path.Stroke = hasFiles ? dragOverBorder : idleBorder;
+        var idleBorder = app?.Resources["DropZoneIdleBorder"] as SolidColorBrush ?? new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x60, 0x60, 0x60));
+        var dragOverBorder = app?.Resources["DropZoneDragOverBorder"] as SolidColorBrush ?? new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x00, 0x78, 0xD4));
+        fillBorder.Background = hasFiles ? dragOverBackground : idleBackground;
+        fillBorder.BorderBrush = hasFiles ? dragOverBorder : idleBorder;
     }
 
     private void DropZone_DragLeave(object sender, DragEventArgs e)
@@ -162,14 +87,12 @@ public partial class DashboardView : UserControl
 
     private static void RestoreDropZoneIdleLook(object? sender)
     {
-        if (sender is not Grid grid || grid.Children.Count < 2) return;
+        if (sender is not Grid grid || grid.Children.Count == 0 || grid.Children[0] is not Border fillBorder) return;
         var app = Application.Current;
         var idleBorder = app?.Resources["DropZoneIdleBorder"] as SolidColorBrush ?? new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x60, 0x60, 0x60));
         var idleBackground = app?.Resources["DropZoneIdleBackground"] as SolidColorBrush ?? new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x2D, 0x2D, 0x2D));
-        if (grid.Children[0] is Border fillBorder)
-            fillBorder.Background = idleBackground;
-        if (grid.Children[1] is Path path)
-            path.Stroke = idleBorder;
+        fillBorder.Background = idleBackground;
+        fillBorder.BorderBrush = idleBorder;
     }
 
     private void DropZone_PreviewDrop(object sender, DragEventArgs e)
@@ -177,9 +100,11 @@ public partial class DashboardView : UserControl
         if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
         var files = (string[]?)e.Data.GetData(DataFormats.FileDrop);
         if (files == null || files.Length == 0) return;
-        var tag = (sender as Grid)?.Tag;
-        if (tag is not (string name, string watchPath, List<string> allowedExts))
-            return;
+        var item = (sender as FrameworkElement)?.DataContext as DropZoneItem;
+        if (item == null) return;
+        var name = item.QueueName;
+        var watchPath = item.WatchFolderPath;
+        var allowedExts = item.AllowedExtensions;
         if (string.IsNullOrWhiteSpace(watchPath))
         {
             _pipeline?.Log($"[{name}] Cannot drop: watch folder not set. Configure it in Settings.");
@@ -242,25 +167,28 @@ public partial class DashboardView : UserControl
     {
         if (_pipeline == null) return;
         StatusSummaryText.Text = _pipeline.IsRunning ? "Status: Running" : "Status: Idle";
-        StartButton.IsEnabled = !_pipeline.IsRunning;
-        StopButton.IsEnabled = _pipeline.IsRunning;
+        PipelineToggleButton.IsChecked = _pipeline.IsRunning;
+        PipelineToggleButton.Content = _pipeline.IsRunning ? "Pipeline active" : "Pipeline inactive";
         if (_pipeline.IsRunning && _pipeline.QueueStates.Count > 0)
-        {
             QueueStatusItems.ItemsSource = _pipeline.QueueStates;
-        }
         else
-        {
             QueueStatusItems.ItemsSource = null;
+        for (var i = 0; i < _pipeline.QueueStates.Count && i < _dropZoneItems.Count; i++)
+        {
+            var state = _pipeline.QueueStates[i];
+            var item = _dropZoneItems[i];
+            item.CurrentImagePath = state.LastProcessedFile ?? "";
+            item.Status = state.Status;
         }
     }
 
-    private void StartButton_Click(object sender, RoutedEventArgs e)
+    private void PipelineToggleButton_Checked(object sender, RoutedEventArgs e)
     {
         _pipeline?.Start();
         UpdateStatus();
     }
 
-    private void StopButton_Click(object sender, RoutedEventArgs e)
+    private void PipelineToggleButton_Unchecked(object sender, RoutedEventArgs e)
     {
         _pipeline?.Stop();
         UpdateStatus();
