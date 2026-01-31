@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.modernwpf.com/2019">
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="{StaticResource PagePadding}">
-        <StackPanel>
+        <Grid>
+            <StackPanel MaxWidth="{StaticResource MaxContentWidth}" HorizontalAlignment="Center">
             <TextBlock Text="Dashboard" FontSize="{StaticResource PageTitleFontSize}" FontWeight="SemiBold" Margin="0,0,0,12"/>
             <Border Margin="0,0,0,12" Padding="{StaticResource CardPadding}" CornerRadius="8" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardBackground}">
                 <StackPanel>
@@ -29,13 +30,14 @@
                 </StackPanel>
             </Border>
             <TextBlock Text="Drop zones" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" Margin="0,0,0,8"/>
-            <ItemsControl x:Name="DropZonesItems"/>
+            <ItemsControl x:Name="DropZonesItems" HorizontalAlignment="Center"/>
             <TextBlock Text="Log" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" Margin="0,12,0,8"/>
             <Border BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="{StaticResource CardPadding}" Background="{StaticResource CardBackground}">
                 <ScrollViewer x:Name="LogScroll" VerticalScrollBarVisibility="Auto" MaxHeight="320">
                     <TextBox x:Name="LogTextBox" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0" Background="Transparent" FontFamily="Consolas" FontSize="{StaticResource BodyFontSize}" MinHeight="200"/>
                 </ScrollViewer>
             </Border>
-        </StackPanel>
+            </StackPanel>
+        </Grid>
     </ScrollViewer>
 </UserControl>

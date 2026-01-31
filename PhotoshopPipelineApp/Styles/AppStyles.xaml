@@ -13,6 +13,12 @@
     <Thickness x:Key="SectionSpacing">12</Thickness>
     <Thickness x:Key="LabelMargin">0,0,0,4</Thickness>
 
+    <!-- Layout width constraints -->
+    <sys:Double x:Key="MaxContentWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">640</sys:Double>
+    <sys:Double x:Key="DropZoneWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">280</sys:Double>
+    <sys:Double x:Key="DropZoneMinHeight" xmlns:sys="clr-namespace:System;assembly=System.Runtime">44</sys:Double>
+    <sys:Double x:Key="InputMaxWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">520</sys:Double>
+
     <!-- Drop zone brushes -->
     <SolidColorBrush x:Key="DropZoneIdleBorder" Color="#606060"/>
     <SolidColorBrush x:Key="DropZoneIdleBackground" Color="#2D2D2D"/>

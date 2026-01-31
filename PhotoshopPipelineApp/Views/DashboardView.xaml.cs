@@ -65,6 +65,8 @@ public partial class DashboardView : UserControl
         var dragOverBackground = app?.Resources["DropZoneDragOverBackground"] as SolidColorBrush ?? new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x1A, 0x3A, 0x52));
         var cardPadding = app?.Resources["CardPadding"] is Thickness t ? t : new Thickness(12);
         var bodyFontSize = app?.Resources["BodyFontSize"] is double d ? d : 12.0;
+        var dropZoneWidth = app?.Resources["DropZoneWidth"] is double dw ? dw : 280.0;
+        var dropZoneMinHeight = app?.Resources["DropZoneMinHeight"] is double dh ? dh : 44.0;
 
         var items = new List<FrameworkElement>();
         foreach (var (name, watchPath, allowedExts) in _dropZones)
@@ -72,7 +74,8 @@ public partial class DashboardView : UserControl
             var grid = new Grid
             {
                 Margin = new Thickness(0, 0, 0, 8),
-                MinHeight = 56,
+                Width = dropZoneWidth,
+                MinHeight = dropZoneMinHeight,
                 AllowDrop = true,
                 Tag = (name, watchPath, allowedExts)
             };
