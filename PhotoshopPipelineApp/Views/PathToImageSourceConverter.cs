@@ -8,19 +8,22 @@ namespace PhotoshopPipelineApp.Views;
 
 public class PathToImageSourceConverter : IValueConverter
 {
-    private const int DecodePixelWidth = 240;
+    private const int DecodePixelWidthDefault = 240;
+    private const int DecodePixelWidthThumbnail = 64;
 
     public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         var path = value as string;
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return null;
+        var useThumbnail = "Small".Equals(parameter as string, StringComparison.OrdinalIgnoreCase);
+        var decodeWidth = useThumbnail ? DecodePixelWidthThumbnail : DecodePixelWidthDefault;
         try
         {
             var uri = new Uri(path, UriKind.Absolute);
             var bi = new BitmapImage();
             bi.BeginInit();
             bi.UriSource = uri;
-            bi.DecodePixelWidth = DecodePixelWidth;
+            bi.DecodePixelWidth = decodeWidth;
             bi.CacheOption = BitmapCacheOption.OnLoad;
             bi.EndInit();
             bi.Freeze();

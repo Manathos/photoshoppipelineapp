@@ -12,9 +12,13 @@
     <Thickness x:Key="CardPadding">10</Thickness>
     <Thickness x:Key="SectionSpacing">10</Thickness>
     <Thickness x:Key="LabelMargin">0,0,0,4</Thickness>
+    <!-- Extra padding so scroll bars sit in a gutter and don't overlay card content -->
+    <Thickness x:Key="ScrollBarGutter">0,0,14,0</Thickness>
+    <Thickness x:Key="ScrollBarGutterBoth">0,0,14,14</Thickness>
 
-    <!-- Corner radius -->
-    <sys:Double x:Key="CardCornerRadius" xmlns:sys="clr-namespace:System;assembly=System.Runtime">10</sys:Double>
+    <!-- Corner radius (consistent dashboard + settings); Border.CornerRadius requires CornerRadius type -->
+    <CornerRadius x:Key="CardCornerRadius">10</CornerRadius>
+    <CornerRadius x:Key="CardInnerCornerRadius">8</CornerRadius>
 
     <!-- Layout width constraints -->
     <sys:Double x:Key="MaxContentWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">640</sys:Double>
@@ -22,20 +26,29 @@
     <sys:Double x:Key="DropZoneMinHeight" xmlns:sys="clr-namespace:System;assembly=System.Runtime">44</sys:Double>
     <sys:Double x:Key="InputMaxWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">520</sys:Double>
 
-    <!-- Drop zone brushes (semi-transparent) -->
+    <!-- Drop zone: same container look as cards -->
     <SolidColorBrush x:Key="DropZoneIdleBorder" Color="#606060"/>
-    <SolidColorBrush x:Key="DropZoneIdleBackground" Color="#252D2D2D"/>
+    <SolidColorBrush x:Key="DropZoneIdleBackground" Color="#990D0D0D"/>
     <SolidColorBrush x:Key="DropZoneDragOverBorder" Color="#0078D4"/>
     <SolidColorBrush x:Key="DropZoneDragOverBackground" Color="#301A3A52"/>
 
     <!-- Root / app (dark gray background, white text) -->
     <SolidColorBrush x:Key="RootBackground" Color="#2D2D2D"/>
+    <!-- Slightly lighter grey behind left/right panels to separate zones visually -->
+    <SolidColorBrush x:Key="ZonePanelBackground" Color="#383838"/>
     <SolidColorBrush x:Key="AppForeground" Color="#FFFFFF"/>
 
-    <!-- Card / section (semi-transparent, subtler border) -->
-    <SolidColorBrush x:Key="CardBorderBrush" Color="#40FFFFFF"/>
-    <SolidColorBrush x:Key="CardBackground" Color="#252D2D2D"/>
-    <SolidColorBrush x:Key="CardInnerBackground" Color="#1E252525"/>
+    <!-- Card / container: consistent darker blackish background app-wide -->
+    <SolidColorBrush x:Key="CardBorderBrush" Color="#50FFFFFF"/>
+    <SolidColorBrush x:Key="CardBackground" Color="#990D0D0D"/>
+    <SolidColorBrush x:Key="CardInnerBackground" Color="#770D0D0D"/>
+
+    <!-- Input: translucent black (visible see-through) -->
+    <SolidColorBrush x:Key="TranslucentBlackBackground" Color="#660D0D0D"/>
+    <!-- Tab buttons: more transparent so background clearly shows through -->
+    <SolidColorBrush x:Key="TabTranslucentBackground" Color="#500D0D0D"/>
+    <SolidColorBrush x:Key="TabSelectedBackground" Color="#70181818"/>
+    <SolidColorBrush x:Key="InputBorderBrush" Color="#50FFFFFF"/>
 
     <!-- Default text (white for visibility) -->
     <Style TargetType="TextBlock">
@@ -59,21 +72,93 @@
         </Style.Triggers>
     </Style>
 
-    <!-- Compact input styles -->
+    <!-- ToggleButton: same look as ButtonStyle (electric blue hover) -->
+    <Style x:Key="ToggleButtonStyle" TargetType="ToggleButton" BasedOn="{StaticResource {x:Type ToggleButton}}">
+        <Setter Property="Padding" Value="6,10"/>
+        <Setter Property="FontSize" Value="{StaticResource ButtonFontSize}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Opacity" Value="0.92"/>
+                <Setter Property="BorderBrush" Value="{StaticResource ButtonHoverBorderBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Compact input styles: rounded, bordered, translucent black -->
     <Style x:Key="TextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
         <Setter Property="Padding" Value="8,6"/>
         <Setter Property="FontSize" Value="{StaticResource BodyFontSize}"/>
         <Setter Property="MinHeight" Value="28"/>
         <Setter Property="Foreground" Value="{StaticResource AppForeground}"/>
+        <Setter Property="Background" Value="{StaticResource TranslucentBlackBackground}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <ScrollViewer x:Name="PART_ContentHost"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
     <Style x:Key="PasswordBoxStyle" TargetType="PasswordBox" BasedOn="{StaticResource {x:Type PasswordBox}}">
         <Setter Property="Padding" Value="8,6"/>
         <Setter Property="FontSize" Value="{StaticResource BodyFontSize}"/>
         <Setter Property="MinHeight" Value="28"/>
         <Setter Property="Foreground" Value="{StaticResource AppForeground}"/>
+        <Setter Property="Background" Value="{StaticResource TranslucentBlackBackground}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="PasswordBox">
+                    <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <ScrollViewer x:Name="PART_ContentHost"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
-    <!-- TabItem: translucent button look, left strip -->
+    <!-- Expander: same container look (darker blackish, rounded, border) -->
+    <Style x:Key="ExpanderStyle" TargetType="Expander" BasedOn="{StaticResource {x:Type Expander}}">
+        <Setter Property="Background" Value="{StaticResource CardBackground}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Foreground" Value="{StaticResource AppForeground}"/>
+    </Style>
+
+    <!-- Settings left nav: list item as rounded selector button -->
+    <Style x:Key="SettingsNavItemStyle" TargetType="ListBoxItem">
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="Margin" Value="0,0,0,6"/>
+        <Setter Property="Foreground" Value="{StaticResource AppForeground}"/>
+        <Setter Property="FontSize" Value="{StaticResource BodyFontSize}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Border" Background="{StaticResource TabTranslucentBackground}" BorderBrush="Transparent" BorderThickness="1" CornerRadius="{StaticResource CardInnerCornerRadius}" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter x:Name="ContentSite" ContentSource="Content" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Border" Property="Background" Value="{StaticResource TabSelectedBackground}"/>
+                            <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource ButtonHoverBorderBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource ButtonHoverBorderBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- TabItem: see-through black (low alpha so background shows), electric blue border on hover -->
     <Style x:Key="TabItemStyle" TargetType="TabItem">
         <Setter Property="Padding" Value="12,10"/>
         <Setter Property="FontSize" Value="{StaticResource BodyFontSize}"/>
@@ -81,16 +166,16 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TabItem">
-                    <Border x:Name="Border" Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}" Margin="0,2">
+                    <Border x:Name="Border" Background="{StaticResource TabTranslucentBackground}" BorderBrush="Transparent" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}" Margin="0,2">
                         <ContentPresenter x:Name="ContentSite" ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="Border" Property="Background" Value="#35FFFFFF"/>
-                            <Setter TargetName="Border" Property="BorderBrush" Value="#60FFFFFF"/>
+                            <Setter TargetName="Border" Property="Background" Value="{StaticResource TabSelectedBackground}"/>
+                            <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource ButtonHoverBorderBrush}"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Border" Property="Background" Value="#30FFFFFF"/>
+                            <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource ButtonHoverBorderBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

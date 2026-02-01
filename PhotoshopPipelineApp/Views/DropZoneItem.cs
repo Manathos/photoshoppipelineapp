@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Media;
+using PhotoshopPipelineApp.Models;
 using PhotoshopPipelineApp.Services;
 
 namespace PhotoshopPipelineApp.Views;
@@ -13,6 +15,9 @@ public class DropZoneItem : INotifyPropertyChanged
     private string _watchFolderPath = string.Empty;
     private List<string> _allowedExtensions = new();
     private ImageSource? _currentImage;
+    private OpenAIMetadata? _lastOpenAIMetadata;
+
+    public ObservableCollection<StepStateItem> StepStates { get; } = new();
 
     public string QueueName
     {
@@ -50,6 +55,12 @@ public class DropZoneItem : INotifyPropertyChanged
     {
         get => _currentImage;
         set { _currentImage = value; OnPropertyChanged(nameof(CurrentImage)); }
+    }
+
+    public OpenAIMetadata? LastOpenAIMetadata
+    {
+        get => _lastOpenAIMetadata;
+        set { _lastOpenAIMetadata = value; OnPropertyChanged(nameof(LastOpenAIMetadata)); }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

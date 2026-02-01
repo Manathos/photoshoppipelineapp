@@ -1,0 +1,31 @@
+# Build output
+bin/
+obj/
+[Bb]uild/
+[Oo]utput/
+[Oo]ut/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+*.sln.iml
+
+# Cursor
+.cursor/
+
+# User config (if ever placed in project)
+config.json
+*.local.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Inno Setup output
+Output/

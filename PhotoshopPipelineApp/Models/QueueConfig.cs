@@ -16,4 +16,7 @@ public class QueueConfig
 
     public string PostStepType { get; set; } = "None";
     public Dictionary<string, string> PostStepSettings { get; set; } = new();
+
+    public bool LocalFolderExportEnabled { get; set; }
+    public string LocalFolderBasePath { get; set; } = string.Empty;
 }

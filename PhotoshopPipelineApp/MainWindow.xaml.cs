@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using PhotoshopPipelineApp.Services;
 using PhotoshopPipelineApp.Views;
 
@@ -29,11 +30,19 @@ public partial class MainWindow : Window
                 return new ShopifyPostStep();
             return new PlaceholderStep(msg => _pipelineService.Log(msg));
         };
+        _pipelineService.InvokeOnUI = action => System.Windows.Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, action);
 
         var dashboard = new DashboardView();
         dashboard.SetPipeline(_pipelineService);
         dashboard.SetConfigService(_configService);
         DashboardContent.Content = dashboard;
+        _pipelineService.Start();
+
+        var imageHistoryService = new ImageHistoryService();
+        var imageCreation = new ImageCreationView();
+        imageCreation.SetConfigService(_configService);
+        imageCreation.SetImageHistoryService(imageHistoryService);
+        ImageCreationContent.Content = imageCreation;
 
         var settings = new SettingsView();
         settings.SetConfigService(_configService);

@@ -1,4 +1,6 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using PhotoshopPipelineApp.Models;
 
 namespace PhotoshopPipelineApp.Services;
 
@@ -7,6 +9,9 @@ public class QueueStateItem : INotifyPropertyChanged
     private string _queueName = string.Empty;
     private PipelineStatus _status;
     private string _lastProcessedFile = string.Empty;
+    private OpenAIMetadata? _lastOpenAIMetadata;
+
+    public ObservableCollection<StepStateItem> CurrentStepStates { get; } = new();
 
     public string QueueName
     {
@@ -27,6 +32,12 @@ public class QueueStateItem : INotifyPropertyChanged
     }
 
     public string LastFileDisplay => string.IsNullOrEmpty(_lastProcessedFile) ? "—" : System.IO.Path.GetFileName(_lastProcessedFile);
+
+    public OpenAIMetadata? LastOpenAIMetadata
+    {
+        get => _lastOpenAIMetadata;
+        set { _lastOpenAIMetadata = value; OnPropertyChanged(nameof(LastOpenAIMetadata)); }
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

@@ -18,6 +18,21 @@ public partial class SettingsView : UserControl
     public SettingsView()
     {
         InitializeComponent();
+        SettingsCategoryList.SelectedIndex = 0;
+    }
+
+    private void SettingsCategoryList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (SettingsCategoryList.SelectedIndex == 0)
+        {
+            ApiKeysPanel.Visibility = Visibility.Visible;
+            ActionsPanel.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            ApiKeysPanel.Visibility = Visibility.Collapsed;
+            ActionsPanel.Visibility = Visibility.Visible;
+        }
     }
 
     public void SetConfigService(ConfigService configService)
@@ -50,6 +65,8 @@ public partial class SettingsView : UserControl
             Name = "Queue 1",
             WatchFolderPath = "",
             OutputFolderPath = "",
+            LocalFolderExportEnabled = false,
+            LocalFolderBasePath = "",
             ActionSetName = "Default Actions",
             ActionName = "My Action",
             AllowedExtensions = new List<string> { "*.jpg", "*.jpeg", "*.png", "*.psd" },
@@ -94,6 +111,9 @@ public partial class SettingsView : UserControl
         QueueNameBox.Text = q.Name ?? "";
         WatchFolderBox.Text = q.WatchFolderPath ?? "";
         OutputFolderBox.Text = q.OutputFolderPath ?? "";
+        LocalFolderExportCheckBox.IsChecked = q.LocalFolderExportEnabled;
+        LocalFolderBasePathBox.Text = q.LocalFolderBasePath ?? "";
+        UpdateLocalFolderExportPanelVisibility();
         ActionSetNameBox.Text = q.ActionSetName ?? "Default Actions";
         ActionNameBox.Text = q.ActionName ?? "My Action";
         AllowedExtensionsBox.Text = q.AllowedExtensions != null ? string.Join(", ", q.AllowedExtensions) : "*.jpg, *.jpeg, *.png, *.psd";
@@ -185,6 +205,15 @@ public partial class SettingsView : UserControl
         PostStepShopifyPanel.Visibility = string.Equals(tag, "Shopify", StringComparison.OrdinalIgnoreCase) ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    private void UpdateLocalFolderExportPanelVisibility()
+    {
+        var visible = LocalFolderExportCheckBox.IsChecked == true;
+        LocalFolderBasePathLabel.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+        LocalFolderExportPanel.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void LocalFolderExportCheckBox_Changed(object sender, RoutedEventArgs e) => UpdateLocalFolderExportPanelVisibility();
+
     private void PreStepTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdatePreStepPanelVisibility();
     private void PostStepTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdatePostStepPanelVisibility();
 
@@ -197,6 +226,8 @@ public partial class SettingsView : UserControl
             Name = $"Queue {next}",
             WatchFolderPath = "",
             OutputFolderPath = "",
+            LocalFolderExportEnabled = false,
+            LocalFolderBasePath = "",
             ActionSetName = "Default Actions",
             ActionName = "My Action",
             AllowedExtensions = new List<string> { "*.jpg", "*.jpeg", "*.png", "*.psd" },
@@ -245,6 +276,17 @@ public partial class SettingsView : UserControl
         };
         if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK && !string.IsNullOrEmpty(dlg.SelectedPath))
             OutputFolderBox.Text = dlg.SelectedPath;
+    }
+
+    private void BrowseLocalFolderBasePath_Click(object sender, RoutedEventArgs e)
+    {
+        using var dlg = new System.Windows.Forms.FolderBrowserDialog
+        {
+            Description = "Select export base folder",
+            UseDescriptionForTitle = true
+        };
+        if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK && !string.IsNullOrEmpty(dlg.SelectedPath))
+            LocalFolderBasePathBox.Text = dlg.SelectedPath;
     }
 
     private void SaveButton_Click(object sender, RoutedEventArgs e)

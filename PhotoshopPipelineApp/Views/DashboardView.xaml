@@ -2,79 +2,394 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.modernwpf.com/2019"
-             xmlns:views="clr-namespace:PhotoshopPipelineApp.Views">
+             xmlns:views="clr-namespace:PhotoshopPipelineApp.Views"
+             VerticalAlignment="Stretch"
+             HorizontalAlignment="Stretch">
     <UserControl.Resources>
         <views:PathToImageSourceConverter x:Key="PathToImageSourceConverter"/>
         <views:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+        <views:StepStatusToIconConverter x:Key="StepStatusToIconConverter"/>
+        <views:StepStatusToBrushConverter x:Key="StepStatusToBrushConverter"/>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <SolidColorBrush x:Key="ReadyToProcessBackground" Color="#E8E8F5E9"/>
     </UserControl.Resources>
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="{StaticResource PagePadding}">
-        <Grid>
-            <StackPanel MaxWidth="{StaticResource MaxContentWidth}" HorizontalAlignment="Center">
-            <Grid Margin="0,0,0,12">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="Dashboard" FontSize="{StaticResource PageTitleFontSize}" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                <ToggleButton x:Name="PipelineToggleButton" Grid.Column="1" Padding="10,4" FontSize="{StaticResource SmallFontSize}" Checked="PipelineToggleButton_Checked" Unchecked="PipelineToggleButton_Unchecked" Style="{StaticResource ButtonStyle}"/>
-            </Grid>
-            <Border Margin="0,0,0,12" Padding="{StaticResource CardPadding}" CornerRadius="10" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardBackground}">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <Button x:Name="ViewOpenAIResponseButton" Content="View last OpenAI response" Click="ViewOpenAIResponseButton_Click" Style="{StaticResource ButtonStyle}"/>
-                    </StackPanel>
-                    <TextBlock x:Name="StatusSummaryText" Text="Status: Idle" FontSize="{StaticResource SectionHeaderFontSize}" Opacity="0.9" Margin="0,0,0,8"/>
-                    <ItemsControl x:Name="QueueStatusItems">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Margin="0,0,0,4" Padding="8" CornerRadius="4" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardInnerBackground}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding QueueName}" FontWeight="SemiBold" MinWidth="120" FontSize="{StaticResource BodyFontSize}"/>
-                                        <TextBlock Text="{Binding Status}" Margin="8,0,0,0" Opacity="0.9" FontSize="{StaticResource BodyFontSize}"/>
-                                        <TextBlock Text="{Binding LastFileDisplay}" Margin="8,0,0,0" Opacity="0.8" FontSize="{StaticResource BodyFontSize}"/>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </Border>
-            <TextBlock Text="Drop zones" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" Margin="0,0,0,8"/>
-            <Grid HorizontalAlignment="Center">
-                <TextBlock x:Name="DropZonesPlaceholder" Text="Add queues in Settings to see drop zones." Opacity="0.8" Margin="0,0,0,8" Visibility="Collapsed"/>
-                <ItemsControl x:Name="DropZonesItems" Width="{StaticResource DropZoneWidth}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Grid Margin="0,0,0,8" AllowDrop="True" MinHeight="{StaticResource DropZoneMinHeight}"
-                                  PreviewDragOver="DropZone_PreviewDragOver" PreviewDrop="DropZone_PreviewDrop" DragLeave="DropZone_DragLeave">
-                                <Border CornerRadius="8" Background="{StaticResource DropZoneIdleBackground}" BorderBrush="{StaticResource DropZoneIdleBorder}" BorderThickness="2" x:Name="DropZoneFillBorder"/>
-                                <Grid Margin="8">
-                                    <Image Stretch="UniformToFill" Source="{Binding CurrentImagePath, Converter={StaticResource PathToImageSourceConverter}}"
-                                           Visibility="{Binding CurrentImagePath, Converter={StaticResource StringToVisibilityConverter}, ConverterParameter=HideWhenEmpty}"/>
-                                    <TextBlock Text="{Binding QueueName, StringFormat='Drop files here for {0}'}" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               FontSize="{StaticResource BodyFontSize}"
-                                               Visibility="{Binding CurrentImagePath, Converter={StaticResource StringToVisibilityConverter}, ConverterParameter=ShowWhenEmpty}"/>
-                                    <Border Background="#80000000" CornerRadius="6" Padding="8" VerticalAlignment="Center" HorizontalAlignment="Center"
-                                            Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}">
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <ProgressBar IsIndeterminate="True" Width="24" Height="24" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="Processing..." FontSize="{StaticResource SmallFontSize}" VerticalAlignment="Center" Foreground="{StaticResource AppForeground}"/>
+    <Grid Margin="{StaticResource PagePadding}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="4"/>
+            <RowDefinition Height="180" MinHeight="80" MaxHeight="500" x:Name="LogRow"/>
+        </Grid.RowDefinitions>
+
+        <!-- Main content (below overlay) -->
+        <Grid Grid.RowSpan="2" x:Name="MainContentGrid" VerticalAlignment="Stretch">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+        <!-- Top bar: AutoDash title -->
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="AutoDash" FontSize="{StaticResource PageTitleFontSize}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+        </Grid>
+
+        <!-- Main content: three zones - Left: Status/Queues, Middle: Drop zones, Right: Processed history -->
+        <Grid Grid.Row="1" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="260" MinWidth="200"/>
+                <ColumnDefinition Width="*" MinWidth="240"/>
+                <ColumnDefinition Width="260" MinWidth="200"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left zone: background panel + Status / Queues card -->
+            <Border Grid.Column="0" Margin="0,0,8,0" Padding="10" CornerRadius="{StaticResource CardCornerRadius}" Background="{StaticResource ZonePanelBackground}" VerticalAlignment="Stretch">
+                <Border Padding="{StaticResource CardPadding}" CornerRadius="{StaticResource CardInnerCornerRadius}" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardBackground}" VerticalAlignment="Stretch">
+                    <StackPanel>
+                        <TextBlock Text="Status" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <TextBlock x:Name="StatusSummaryText" Text="Idle" FontSize="{StaticResource BodyFontSize}" Opacity="0.9" Margin="0,0,0,8"/>
+                        <Button x:Name="ViewOpenAIResponseButton" Content="View last OpenAI response" Click="ViewOpenAIResponseButton_Click" Style="{StaticResource ButtonStyle}" Margin="0,0,0,12"/>
+                        <TextBlock Text="Queues" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <ItemsControl x:Name="QueueStatusItems">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,0,4" Padding="8" CornerRadius="4" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardInnerBackground}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding QueueName}" FontWeight="SemiBold" FontSize="{StaticResource BodyFontSize}"/>
+                                            <TextBlock Text="{Binding Status}" Margin="0,2,0,0" Opacity="0.9" FontSize="{StaticResource SmallFontSize}"/>
+                                            <TextBlock Text="{Binding LastFileDisplay}" Margin="0,0,0,0" Opacity="0.8" FontSize="{StaticResource SmallFontSize}" TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
                                     </Border>
-                                </Grid>
-                            </Grid>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </Grid>
-            <TextBlock Text="Log" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" Margin="0,12,0,8"/>
-            <Border BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="{StaticResource CardPadding}" Background="{StaticResource CardBackground}">
-                <ScrollViewer x:Name="LogScroll" VerticalScrollBarVisibility="Auto" MaxHeight="320">
-                    <TextBox x:Name="LogTextBox" Style="{StaticResource TextBoxStyle}" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0" Background="Transparent" FontFamily="Consolas" MinHeight="200"/>
-                </ScrollViewer>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
             </Border>
-            </StackPanel>
+
+            <!-- Middle zone: Processing section at top (always visible), then Queue list below -->
+            <Border x:Name="MiddleZoneBorder" Grid.Column="1" Margin="0,0,8,0" Padding="10" CornerRadius="{StaticResource CardCornerRadius}" Background="{StaticResource ZonePanelBackground}" VerticalAlignment="Stretch"
+                    AllowDrop="True" PreviewDragOver="SingleDropZone_PreviewDragOver" PreviewDrop="SingleDropZone_PreviewDrop" DragLeave="SingleDropZone_DragLeave">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <!-- Processing section: one slot; shows current job with step icons when busy, "No job running" when idle -->
+                    <Border x:Name="ProcessingSection" Grid.Row="0" Margin="0,0,0,12" Padding="10" CornerRadius="8" Background="{StaticResource CardInnerBackground}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Processing" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <TextBlock x:Name="ProcessingIdleText" Text="No job running — next ready item will start when you click Process below." FontSize="{StaticResource SmallFontSize}" Opacity="0.85" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                <StackPanel x:Name="ProcessingContentPanel" Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <ProgressBar IsIndeterminate="True" Width="120" Height="6" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock x:Name="ProcessingStatusLabel" Text="Processing…" FontSize="{StaticResource SmallFontSize}" FontWeight="SemiBold" Opacity="0.9" VerticalAlignment="Center" Foreground="{StaticResource DropZoneDragOverBorder}"/>
+                                </StackPanel>
+                                <TextBlock x:Name="ProcessingVerifyHint" Text="Waiting for output files…" FontSize="{StaticResource SmallFontSize}" Opacity="0.85" Margin="0,0,0,6" Foreground="#E0A030" Visibility="Collapsed"/>
+                                <Border MaxHeight="280" MaxWidth="400" CornerRadius="4" Background="{StaticResource CardInnerBackground}" Margin="0,0,0,8" SizeChanged="ProcessingImageBorder_SizeChanged">
+                                    <Image x:Name="ProcessingImage" Stretch="Uniform" MaxHeight="280" MaxWidth="400"/>
+                                </Border>
+                                <TextBlock x:Name="ProcessingQueueName" Text="—" FontSize="{StaticResource BodyFontSize}" Opacity="0.9" Margin="0,0,0,4"/>
+                                <TextBlock x:Name="ProcessingFileName" Text="—" FontSize="{StaticResource SmallFontSize}" Opacity="0.85" TextTrimming="CharacterEllipsis" Margin="0,0,0,8"/>
+                                <ItemsControl x:Name="ProcessingStepIndicators">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
+                                                <TextBlock Text="{Binding Status, Converter={StaticResource StepStatusToIconConverter}}"
+                                                           Foreground="{Binding Status, Converter={StaticResource StepStatusToBrushConverter}}"
+                                                           FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Label}" FontSize="10" Opacity="0.9" Margin="2,0,0,0" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                </StackPanel>
+                            </StackPanel>
+                            <Button x:Name="ProcessingOpenAIButton" Grid.Column="1" Content="OpenAI" Click="ProcessingViewOpenAI_Click" Style="{StaticResource ButtonStyle}" Padding="6,4" FontSize="{StaticResource SmallFontSize}" VerticalAlignment="Top" Visibility="Collapsed" ToolTip="View OpenAI response for this job"/>
+                        </Grid>
+                    </Border>
+                    <TextBlock Grid.Row="1" Text="Queued" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <ScrollViewer x:Name="DropPendingScroll" Grid.Row="2" MinHeight="120" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="{StaticResource ScrollBarGutter}">
+                        <Grid>
+                            <StackPanel x:Name="QueueItemsPanel" Orientation="Vertical" MinHeight="100"
+                                       Background="Transparent"
+                                       AllowDrop="True"
+                                       PreviewDragOver="QueuePanel_PreviewDragOver"
+                                       PreviewDragLeave="QueuePanel_PreviewDragLeave"
+                                       PreviewDrop="QueuePanel_PreviewDrop">
+                                <TextBlock x:Name="DropPlaceholder" Text="Drop images here" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{StaticResource BodyFontSize}" Opacity="0.9" Margin="0,24,0,24"/>
+                                <TextBlock Text="Select Default or Right Justified, then click Process. Ready items get a green hue and run when the processing spot is free." FontSize="{StaticResource SmallFontSize}" Opacity="0.85" Margin="0,12,0,6" TextWrapping="Wrap"/>
+                                <ItemsControl x:Name="PendingDropsItems">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="0,0,0,8" Padding="8" CornerRadius="6" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" Background="{StaticResource CardInnerBackground}">
+                                            <Border.Style>
+                                                <Style TargetType="Border" BasedOn="{x:Null}">
+                                                    <Setter Property="Background" Value="{StaticResource CardInnerBackground}"/>
+                                                    <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}"/>
+                                                    <Setter Property="BorderThickness" Value="1"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="BorderBrush" Value="{StaticResource ButtonHoverBorderBrush}"/>
+                                                            <Setter Property="BorderThickness" Value="2"/>
+                                                        </Trigger>
+                                                        <DataTrigger Binding="{Binding IsReadyToProcess}" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource ReadyToProcessBackground}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="24"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                <!-- Drag handle on the left -->
+                                                <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Width="24" Margin="0,0,8,0" VerticalAlignment="Stretch"
+                                                        Cursor="SizeAll" Background="Transparent"
+                                                        PreviewMouseLeftButtonDown="PendingItem_PreviewMouseLeftButtonDown"
+                                                        PreviewMouseMove="PendingItem_PreviewMouseMove"
+                                                        PreviewMouseLeftButtonUp="PendingItem_PreviewMouseLeftButtonUp">
+                                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                        <TextBlock Text="⋮⋮" FontSize="14" Opacity="0.5" Foreground="{StaticResource AppForeground}" HorizontalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <!-- Image with overlaid checkboxes -->
+                                                <Grid Grid.Column="1" Grid.Row="0" Margin="0,0,0,8">
+                                                        <Border CornerRadius="4" Background="{StaticResource CardInnerBackground}" SizeChanged="PendingItemImageBorder_SizeChanged">
+                                                            <Image Source="{Binding SourceFilePath, Converter={StaticResource PathToImageSourceConverter}}" Stretch="Uniform" MaxHeight="140"/>
+                                                        </Border>
+                                                        <!-- Checkboxes overlaid on bottom-left of image (scaled to 75% – compact but readable) -->
+                                                        <Border VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="6" Background="#88000000" CornerRadius="6" Padding="5,3">
+                                                            <StackPanel>
+                                                                <StackPanel.LayoutTransform>
+                                                                    <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
+                                                                </StackPanel.LayoutTransform>
+                                                                <CheckBox Content="Default" IsChecked="{Binding IsDefault, Mode=TwoWay}" Margin="0,0,0,1" FontSize="11" Foreground="White"/>
+                                                                <CheckBox Content="Right Justified" IsChecked="{Binding IsRightJustified, Mode=TwoWay}" Margin="0,0,0,0" FontSize="11" Foreground="White"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </Grid>
+                                                    <!-- Process button to the right -->
+                                                    <Button Grid.Column="2" Grid.Row="0" Click="PendingProcess_Click" VerticalAlignment="Center" Width="90" Height="90" FontSize="{StaticResource SmallFontSize}" Padding="8" Margin="12,0,0,0">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
+                                                                <Setter Property="Content" Value="Process"/>
+                                                                <Setter Property="Background" Value="{StaticResource DropZoneDragOverBorder}"/>
+                                                                <Setter Property="Foreground" Value="White"/>
+                                                                <Setter Property="BorderBrush" Value="Transparent"/>
+                                                                <Setter Property="BorderThickness" Value="2"/>
+                                                                <Setter Property="IsEnabled" Value="{Binding CanQueue}"/>
+                                                                <Setter Property="Template">
+                                                                    <Setter.Value>
+                                                                        <ControlTemplate TargetType="Button">
+                                                                            <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                            </Border>
+                                                                            <ControlTemplate.Triggers>
+                                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                                    <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource ButtonHoverBorderBrush}"/>
+                                                                                </Trigger>
+                                                                                <Trigger Property="IsEnabled" Value="False">
+                                                                                    <Setter TargetName="border" Property="Opacity" Value="0.7"/>
+                                                                                </Trigger>
+                                                                            </ControlTemplate.Triggers>
+                                                                        </ControlTemplate>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsReadyToProcess}" Value="True">
+                                                                        <Setter Property="Content" Value="Waiting..."/>
+                                                                        <Setter Property="Background" Value="#606060"/>
+                                                                        <Setter Property="Foreground" Value="#C0C0C0"/>
+                                                                        <Setter Property="IsEnabled" Value="False"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                <!-- Filename at the bottom -->
+                                                <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1" Text="{Binding FileNameDisplay}" FontWeight="SemiBold" FontSize="{StaticResource BodyFontSize}" TextTrimming="CharacterEllipsis"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            </StackPanel>
+                            <!-- Drop indicator line - shows where item will be inserted -->
+                            <Canvas x:Name="DropIndicatorCanvas" IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <Border x:Name="DropIndicatorLine" Height="4" Width="400" Background="{StaticResource ButtonHoverBorderBrush}" Visibility="Collapsed" Canvas.Left="0"/>
+                            </Canvas>
+                        </Grid>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Right zone: Processed history in its own container -->
+            <Border Grid.Column="2" Padding="10" CornerRadius="{StaticResource CardCornerRadius}" Background="{StaticResource ZonePanelBackground}" VerticalAlignment="Stretch">
+                <Border Padding="{StaticResource CardPadding}" CornerRadius="{StaticResource CardInnerCornerRadius}" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardBackground}" VerticalAlignment="Stretch">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="Processed" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <ListBox x:Name="ProcessedHistoryList" Grid.Row="1" Background="{StaticResource CardInnerBackground}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" Padding="6,6,20,6"
+                                 SelectionChanged="ProcessedHistoryList_SelectionChanged" MouseDoubleClick="ProcessedHistoryList_MouseDoubleClick">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="48" Height="48" CornerRadius="4" Background="{StaticResource CardInnerBackground}" Margin="0,0,8,0">
+                                            <Border.Clip>
+                                                <RectangleGeometry RadiusX="4" RadiusY="4" Rect="0,0,48,48"/>
+                                            </Border.Clip>
+                                            <Image Source="{Binding InputFilePath, Converter={StaticResource PathToImageSourceConverter}, ConverterParameter=Small}"
+                                                   Stretch="UniformToFill" Width="48" Height="48"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding FileNameDisplay}" FontWeight="SemiBold" FontSize="{StaticResource BodyFontSize}" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock FontSize="{StaticResource SmallFontSize}" Opacity="0.85">
+                                                <Run Text="{Binding QueueName, Mode=OneWay}"/>
+                                                <Run Text=" · "/>
+                                                <Run Text="{Binding CompletedAt, StringFormat='{}{0:g}', Mode=OneWay}"/>
+                                            </TextBlock>
+                                            <TextBlock Text="Timed out" FontSize="{StaticResource SmallFontSize}" Foreground="#888078B0" Visibility="{Binding TimedOut, Converter={StaticResource BoolToVis}}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+            </Border>
         </Grid>
-    </ScrollViewer>
+        </Grid>
+
+        <!-- Resizer for log panel -->
+        <GridSplitter Grid.Row="2" Height="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{StaticResource CardBorderBrush}" ResizeDirection="Rows" ShowsPreview="False" Cursor="SizeNS">
+            <GridSplitter.Style>
+                <Style TargetType="GridSplitter">
+                    <Setter Property="Background" Value="{StaticResource CardBorderBrush}"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{StaticResource DropZoneDragOverBorder}"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </GridSplitter.Style>
+        </GridSplitter>
+
+        <!-- Bottom zone: Log full width -->
+        <Border Grid.Row="3" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="{StaticResource CardCornerRadius}" Padding="{StaticResource CardPadding}" Background="{StaticResource CardBackground}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Log" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                </Grid>
+                <ScrollViewer x:Name="LogScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" MinHeight="40" Padding="{StaticResource ScrollBarGutter}">
+                    <TextBox x:Name="LogTextBox" Style="{StaticResource TextBoxStyle}" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0" Background="Transparent" FontFamily="Consolas" MinHeight="36"/>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- Processed job detail overlay (drawn first so OpenAI overlay can appear on top when opened from here) -->
+        <Grid x:Name="ProcessedDetailOverlay" Grid.RowSpan="4" Visibility="Collapsed" Background="#B0000000" MouseDown="ProcessedDetailOverlay_MouseDown">
+            <Border x:Name="ProcessedDetailCard" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="500" MinWidth="360" Margin="24"
+                    Padding="0" CornerRadius="14" BorderBrush="{StaticResource DropZoneDragOverBorder}" BorderThickness="2"
+                    Background="{StaticResource CardBackground}" Opacity="0.98">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="24" ShadowDepth="0" Opacity="0.4" Color="Black"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0" Margin="16,16,16,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="ProcessedDetailTitle" Text="Processed job" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Content="Close" Click="ProcessedDetailClose_Click" Style="{StaticResource ButtonStyle}" Padding="8,4" FontSize="{StaticResource SmallFontSize}"/>
+                    </Grid>
+                    <Button x:Name="ProcessedDetailViewOpenAIButton" Grid.Row="1" Content="View OpenAI info (full)" Click="ProcessedDetailViewOpenAI_Click" Style="{StaticResource ButtonStyle}" Padding="8,4" FontSize="{StaticResource SmallFontSize}" Margin="16,0,16,8" HorizontalAlignment="Left" Visibility="Collapsed" ToolTip="Show full OpenAI response for this job"/>
+                    <Border Grid.Row="2" Margin="16,0,16,12" MaxHeight="160" CornerRadius="6" SizeChanged="ProcessedDetailImageBorder_SizeChanged">
+                        <Image Source="{Binding InputFilePath, Converter={StaticResource PathToImageSourceConverter}}" Stretch="Uniform" MaxHeight="160"/>
+                    </Border>
+                    <Border Grid.Row="3" Margin="16,0,16,16" Padding="0,0,0,4" BorderBrush="#400078D4" BorderThickness="0,1,0,0">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="{StaticResource ScrollBarGutter}">
+                            <TextBlock x:Name="ProcessedDetailContent" Text="" TextWrapping="Wrap" FontSize="{StaticResource BodyFontSize}" Opacity="0.95" LineHeight="20" Margin="0,0,0,8"/>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- OpenAI response overlay: last so it draws on top of Processed Detail when "View OpenAI info (full)" is clicked -->
+        <Grid x:Name="OpenAIOverlay" Grid.RowSpan="4" Visibility="Collapsed" Background="#B0000000" MouseDown="OpenAIOverlayBackdrop_MouseDown">
+            <Border VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="420" MinWidth="320" Margin="24"
+                    Padding="0" CornerRadius="14" BorderBrush="{StaticResource DropZoneDragOverBorder}" BorderThickness="2"
+                    Background="{StaticResource CardBackground}" Opacity="0.98">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="24" ShadowDepth="0" Opacity="0.4" Color="Black"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0" Margin="16,16,16,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="OpenAIOverlayTitle" Text="OpenAI response" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource AppForeground}"/>
+                        <Button x:Name="OpenAIOverlayRedoButton" Grid.Column="1" Content="↻" ToolTip="Get new title, description, and tags" Click="OpenAIOverlayRedo_Click" Style="{StaticResource ButtonStyle}" Padding="6,4" FontSize="{StaticResource SmallFontSize}" Margin="0,0,8,0" Visibility="Collapsed"/>
+                        <Button x:Name="OpenAIOverlayCloseButton" Grid.Column="2" Content="Close" Click="OpenAIOverlayClose_Click" Style="{StaticResource ButtonStyle}" Padding="8,4" FontSize="{StaticResource SmallFontSize}"/>
+                    </Grid>
+                    <Grid Grid.Row="1" Margin="16,0,16,16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <ProgressBar x:Name="OpenAIOverlayProgressBar" Grid.Row="0" IsIndeterminate="True" Height="6" Margin="0,0,0,8" Visibility="Collapsed"/>
+                        <Border Grid.Row="1" Padding="0,0,0,4" BorderBrush="#400078D4" BorderThickness="0,1,0,0">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="{StaticResource ScrollBarGutter}">
+                                <TextBlock x:Name="OpenAIOverlayContent" Text="" TextWrapping="Wrap" FontSize="{StaticResource BodyFontSize}" Opacity="0.95" LineHeight="20" Margin="0,0,0,8"/>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
 </UserControl>

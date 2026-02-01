@@ -3,16 +3,19 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="http://schemas.modernwpf.com/2019"
         ui:WindowHelper.UseModernWindowStyle="True"
-        Title="Photoshop Pipeline"
-        Height="600" Width="900"
-        MinHeight="400" MinWidth="700">
+        Title="AutoDash"
+        Height="620" Width="1000"
+        MinHeight="420" MinWidth="640">
     <Grid Background="{StaticResource RootBackground}">
-        <TabControl x:Name="MainTabControl" Margin="0" TabStripPlacement="Left">
+        <TabControl x:Name="MainTabControl" Margin="0" TabStripPlacement="Left" Background="Transparent">
             <TabItem Header="Dashboard" Style="{StaticResource TabItemStyle}">
-                <ContentControl x:Name="DashboardContent" />
+                <ContentControl x:Name="DashboardContent" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"/>
+            </TabItem>
+            <TabItem Header="Image Creation" Style="{StaticResource TabItemStyle}">
+                <ContentControl x:Name="ImageCreationContent" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"/>
             </TabItem>
             <TabItem Header="Settings" Style="{StaticResource TabItemStyle}">
-                <ContentControl x:Name="SettingsContent" />
+                <ContentControl x:Name="SettingsContent" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"/>
             </TabItem>
         </TabControl>
     </Grid>

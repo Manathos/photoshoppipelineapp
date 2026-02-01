@@ -1,7 +1,7 @@
-; Photoshop Pipeline App - Inno Setup script
+; AutoDash - Inno Setup script
 ; In CI, pass /DPublishDir=path\to\publish to iscc
 
-#define MyAppName "Photoshop Pipeline"
+#define MyAppName "AutoDash"
 #define MyAppVersion "1.0.0"
 #ifndef PublishDir
   #define PublishDir "publish"
@@ -14,7 +14,7 @@ AppVersion={#MyAppVersion}
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 OutputDir=Output
-OutputBaseFilename=PhotoshopPipelineApp-Setup
+OutputBaseFilename=AutoDash-Setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

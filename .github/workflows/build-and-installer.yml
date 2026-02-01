@@ -32,7 +32,7 @@ jobs:
 
       - name: Create zip artifact
         run: |
-          Compress-Archive -Path publish\* -DestinationPath PhotoshopPipelineApp-win-x64.zip
+          Compress-Archive -Path publish\* -DestinationPath AutoDash-win-x64.zip
 
       - name: Install Inno Setup
         run: choco install innosetup -y --no-progress
@@ -45,19 +45,19 @@ jobs:
           if (Test-Path $iscc) {
             & $iscc /DPublishDir="$PWD\publish" installer.iss
           }
-          if (Test-Path "Output\PhotoshopPipelineApp-Setup.exe") {
+          if (Test-Path "Output\AutoDash-Setup.exe") {
             echo "has_installer=true" >> $env:GITHUB_OUTPUT
           }
 
       - name: Upload zip artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PhotoshopPipelineApp-win-x64-zip
-          path: PhotoshopPipelineApp-win-x64.zip
+          name: AutoDash-win-x64-zip
+          path: AutoDash-win-x64.zip
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         if: steps.installer.outputs.has_installer == 'true'
         with:
-          name: PhotoshopPipelineApp-Setup
-          path: Output/PhotoshopPipelineApp-Setup.exe
+          name: AutoDash-Setup
+          path: Output/AutoDash-Setup.exe

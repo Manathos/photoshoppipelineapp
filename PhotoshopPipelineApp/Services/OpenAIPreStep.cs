@@ -66,6 +66,9 @@ public class OpenAIPreStep : IPreStep
             ? p
             : "Analyze this image and return a JSON object with exactly these keys: \"title\" (short product title, one line), \"description\" (product description for a web store, 1-3 sentences), \"tags\" (array of strings, 3-8 relevant tags). Return only valid JSON, no markdown.";
 
+        var userText = prompt.Trim();
+        if (!userText.Contains("json", StringComparison.OrdinalIgnoreCase))
+            userText += " Respond with valid JSON only.";
         var requestBody = new
         {
             model,
@@ -73,12 +76,13 @@ public class OpenAIPreStep : IPreStep
             response_format = new { type = "json_object" },
             messages = new object[]
             {
+                new { role = "system", content = "You must respond with a single valid JSON object. Do not use markdown code fences." },
                 new
                 {
                     role = "user",
                     content = new object[]
                     {
-                        new { type = "text", text = prompt },
+                        new { type = "text", text = userText },
                         new { type = "image_url", image_url = new { url = dataUrl } }
                     }
                 }

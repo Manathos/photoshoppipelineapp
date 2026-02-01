@@ -2,105 +2,146 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.modernwpf.com/2019">
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="{StaticResource PagePadding}">
-        <Grid>
-            <StackPanel MaxWidth="{StaticResource MaxContentWidth}" HorizontalAlignment="Center">
-            <TextBlock Text="Settings" FontSize="{StaticResource PageTitleFontSize}" FontWeight="SemiBold" Margin="0,0,0,12"/>
-            <Expander Header="API keys" IsExpanded="False" Margin="0,0,0,12">
-                <Border Margin="0,8,0,0" Padding="{StaticResource CardPadding}" CornerRadius="10" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardBackground}">
-                    <StackPanel>
-                        <TextBlock Text="API keys (optional env override: OPENAI_API_KEY, SHOPIFY_ACCESS_TOKEN)" TextWrapping="Wrap" Margin="0,0,0,8" Opacity="0.9" FontSize="{StaticResource BodyFontSize}"/>
-                        <TextBlock Text="OpenAI API key" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                        <PasswordBox x:Name="OpenAIKeyBox" Style="{StaticResource PasswordBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
-                        <TextBlock Text="Shopify access token" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                        <PasswordBox x:Name="ShopifyTokenBox" Style="{StaticResource PasswordBoxStyle}" Margin="0,0,0,0" MaxWidth="{StaticResource InputMaxWidth}"/>
-                    </StackPanel>
+    <Grid Margin="{StaticResource PagePadding}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Settings" FontSize="{StaticResource PageTitleFontSize}" FontWeight="SemiBold" Margin="0,0,0,12"/>
+
+        <Grid Grid.Row="1" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="160" MinWidth="140"/>
+                <ColumnDefinition Width="*" MinWidth="320"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: category selector (rounded panel matching dashboard) -->
+            <Border Grid.Column="0" Margin="0,0,8,0" Padding="10" CornerRadius="{StaticResource CardCornerRadius}" Background="{StaticResource ZonePanelBackground}" VerticalAlignment="Stretch">
+                <Border Padding="{StaticResource CardPadding}" CornerRadius="{StaticResource CardInnerCornerRadius}" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardBackground}" VerticalAlignment="Stretch">
+                    <ListBox x:Name="SettingsCategoryList" SelectionChanged="SettingsCategoryList_SelectionChanged" ItemContainerStyle="{StaticResource SettingsNavItemStyle}" Background="Transparent" BorderThickness="0">
+                        <ListBoxItem Content="API keys"/>
+                        <ListBoxItem Content="Actions"/>
+                    </ListBox>
                 </Border>
-            </Expander>
-            <Expander Header="Queues" IsExpanded="False" Margin="0,0,0,12">
-                <StackPanel>
-            <Grid Margin="0,0,0,12">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <ListBox x:Name="QueueListBox" MinHeight="120" SelectionChanged="QueueListBox_SelectionChanged"
-                         DisplayMemberPath="Name"/>
-                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
-                    <Button x:Name="AddQueueButton" Content="Add queue" Click="AddQueue_Click" Margin="0,0,0,8" Style="{StaticResource ButtonStyle}"/>
-                    <Button x:Name="RemoveQueueButton" Content="Remove" Click="RemoveQueue_Click" IsEnabled="False" Style="{StaticResource ButtonStyle}"/>
-                </StackPanel>
-            </Grid>
-            <Border x:Name="QueueDetailPanel" Margin="0,0,0,12" Padding="{StaticResource CardPadding}" CornerRadius="10" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardBackground}" Visibility="Collapsed">
-                <StackPanel>
-                    <TextBlock Text="Queue name" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                    <TextBox x:Name="QueueNameBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,12" MaxWidth="{StaticResource InputMaxWidth}"/>
-                    <TextBlock Text="Watch folder (input)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" MaxWidth="{StaticResource InputMaxWidth}"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBox x:Name="WatchFolderBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,8,0"/>
-                        <Button Grid.Column="1" Content="Browse…" Click="BrowseWatchFolder_Click" Style="{StaticResource ButtonStyle}"/>
-                    </Grid>
-                    <TextBlock Text="Output folder" Margin="0,12,0,4" FontSize="{StaticResource BodyFontSize}"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" MaxWidth="{StaticResource InputMaxWidth}"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBox x:Name="OutputFolderBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,8,0"/>
-                        <Button Grid.Column="1" Content="Browse…" Click="BrowseOutputFolder_Click" Style="{StaticResource ButtonStyle}"/>
-                    </Grid>
-                    <TextBlock Text="Photoshop action" Margin="0,12,0,8" FontSize="{StaticResource BodyFontSize}"/>
-                    <TextBlock Text="Action set name" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                    <TextBox x:Name="ActionSetNameBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
-                    <TextBlock Text="Action name" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                    <TextBox x:Name="ActionNameBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,12" MaxWidth="{StaticResource InputMaxWidth}"/>
-                    <TextBlock Text="Allowed extensions (e.g. *.jpg, *.png)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                    <TextBox x:Name="AllowedExtensionsBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
-                    <TextBlock Text="Required file names (one per line, in output folder)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                    <TextBox x:Name="RequiredFileNamesBox" Style="{StaticResource TextBoxStyle}" AcceptsReturn="True" TextWrapping="Wrap" Height="80" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
-                    <TextBlock Text="Required files timeout (seconds)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                    <TextBox x:Name="TimeoutBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,12" MaxWidth="{StaticResource InputMaxWidth}"/>
-                    <TextBlock Text="Pre-step" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                    <ComboBox x:Name="PreStepTypeCombo" Margin="0,0,0,8" SelectionChanged="PreStepTypeCombo_SelectionChanged">
-                        <ComboBoxItem Content="None" Tag="None"/>
-                        <ComboBoxItem Content="OpenAI (image analysis)" Tag="OpenAI"/>
-                    </ComboBox>
-                    <StackPanel x:Name="PreStepOpenAIPanel" Visibility="Collapsed" Margin="0,0,0,8">
-                        <TextBlock Text="OpenAI API key (leave blank to use global)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                        <PasswordBox x:Name="PreStepOpenAIKeyBox" Style="{StaticResource PasswordBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
-                        <TextBlock Text="Custom prompt (optional – leave blank for default: ask for title, description, tags as JSON)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                        <TextBox x:Name="PreStepOpenAIPromptBox" Style="{StaticResource TextBoxStyle}" AcceptsReturn="True" TextWrapping="Wrap" Height="80" Margin="0,0,0,8" VerticalScrollBarVisibility="Auto" MaxWidth="{StaticResource InputMaxWidth}"/>
-                    </StackPanel>
-                    <TextBlock Text="Post-step" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                    <ComboBox x:Name="PostStepTypeCombo" Margin="0,0,0,8" SelectionChanged="PostStepTypeCombo_SelectionChanged">
-                        <ComboBoxItem Content="None (placeholder)" Tag="None"/>
-                        <ComboBoxItem Content="Shopify" Tag="Shopify"/>
-                    </ComboBox>
-                    <StackPanel x:Name="PostStepShopifyPanel" Visibility="Collapsed" Margin="0,0,0,8">
-                        <TextBlock Text="Store URL (e.g. mystore.myshopify.com)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                        <TextBox x:Name="ShopifyStoreUrlBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
-                        <TextBlock Text="Access token (leave blank to use global)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                        <PasswordBox x:Name="ShopifyAccessTokenBox" Style="{StaticResource PasswordBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
-                        <CheckBox x:Name="ShopifyCreateAsDraftCheckBox" Content="Create products as draft" Margin="0,0,0,8"/>
-                        <TextBlock Text="Default price" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                        <TextBox x:Name="ShopifyDefaultPriceBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
-                        <TextBlock Text="SKU pattern (e.g. IMG-{filename} or {timestamp})" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                        <TextBox x:Name="ShopifySkuPatternBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
-                        <TextBlock Text="Variant option name (e.g. Size)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                        <TextBox x:Name="ShopifyVariantOptionNameBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
-                        <TextBlock Text="Variant option values (comma-separated, e.g. S, M, L)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
-                        <TextBox x:Name="ShopifyVariantOptionValuesBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,0" MaxWidth="{StaticResource InputMaxWidth}"/>
-                    </StackPanel>
-                    </StackPanel>
             </Border>
-                </StackPanel>
-            </Expander>
-            <Button Content="Save settings" Click="SaveButton_Click" HorizontalAlignment="Left" Style="{StaticResource ButtonStyle}"/>
-            </StackPanel>
+
+            <!-- Right: content area (rounded panel, scrollable) -->
+            <Border Grid.Column="1" Padding="10" CornerRadius="{StaticResource CardCornerRadius}" Background="{StaticResource ZonePanelBackground}" VerticalAlignment="Stretch">
+                <Border Padding="{StaticResource CardPadding}" CornerRadius="{StaticResource CardInnerCornerRadius}" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardBackground}" VerticalAlignment="Stretch">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="{StaticResource ScrollBarGutter}">
+                        <Grid>
+                            <!-- API keys panel -->
+                            <StackPanel x:Name="ApiKeysPanel" Visibility="Visible">
+                                <TextBlock Text="Optional env override: OPENAI_API_KEY, SHOPIFY_ACCESS_TOKEN" TextWrapping="Wrap" Margin="0,0,0,8" Opacity="0.9" FontSize="{StaticResource SmallFontSize}"/>
+                                <TextBlock Text="OpenAI API key" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                <PasswordBox x:Name="OpenAIKeyBox" Style="{StaticResource PasswordBoxStyle}" Margin="0,0,0,8"/>
+                                <TextBlock Text="Shopify access token" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                <PasswordBox x:Name="ShopifyTokenBox" Style="{StaticResource PasswordBoxStyle}" Margin="0,0,0,0"/>
+                            </StackPanel>
+
+                            <!-- Actions panel -->
+                            <Grid x:Name="ActionsPanel" Visibility="Collapsed">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Grid Grid.Row="0" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ListBox x:Name="QueueListBox" MinHeight="120" Padding="6,6,20,6" SelectionChanged="QueueListBox_SelectionChanged" DisplayMemberPath="Name"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
+                                        <Button x:Name="AddQueueButton" Content="Add queue" Click="AddQueue_Click" Margin="0,0,0,8" Style="{StaticResource ButtonStyle}"/>
+                                        <Button x:Name="RemoveQueueButton" Content="Remove" Click="RemoveQueue_Click" IsEnabled="False" Style="{StaticResource ButtonStyle}"/>
+                                    </StackPanel>
+                                </Grid>
+                                <Border Grid.Row="1" x:Name="QueueDetailPanel" Margin="0,0,0,12" Padding="{StaticResource CardPadding}" CornerRadius="{StaticResource CardInnerCornerRadius}" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardInnerBackground}" Visibility="Collapsed">
+                                    <StackPanel>
+                                        <TextBlock Text="Queue name" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                        <TextBox x:Name="QueueNameBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,12" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                        <TextBlock Text="Watch folder (input)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox x:Name="WatchFolderBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,8,0"/>
+                                            <Button Grid.Column="1" Content="Browse…" Click="BrowseWatchFolder_Click" Style="{StaticResource ButtonStyle}"/>
+                                        </Grid>
+                                        <TextBlock Text="Output folder" Margin="0,12,0,4" FontSize="{StaticResource BodyFontSize}"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox x:Name="OutputFolderBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,8,0"/>
+                                            <Button Grid.Column="1" Content="Browse…" Click="BrowseOutputFolder_Click" Style="{StaticResource ButtonStyle}"/>
+                                        </Grid>
+                                        <TextBlock Text="Local export (runs before post-step)" Margin="0,12,0,4" FontSize="{StaticResource BodyFontSize}"/>
+                                        <CheckBox x:Name="LocalFolderExportCheckBox" Content="Copy output to folder named by title (text before first comma)" Margin="0,0,0,8" Checked="LocalFolderExportCheckBox_Changed" Unchecked="LocalFolderExportCheckBox_Changed"/>
+                                        <TextBlock x:Name="LocalFolderBasePathLabel" Text="Export base folder" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}" Visibility="Collapsed"/>
+                                        <Grid x:Name="LocalFolderExportPanel" Margin="0,0,0,12" Visibility="Collapsed">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox x:Name="LocalFolderBasePathBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,8,0"/>
+                                            <Button Grid.Column="1" Content="Browse…" Click="BrowseLocalFolderBasePath_Click" Style="{StaticResource ButtonStyle}"/>
+                                        </Grid>
+                                        <TextBlock Text="Photoshop action" Margin="0,12,0,8" FontSize="{StaticResource BodyFontSize}"/>
+                                        <TextBlock Text="Action set name" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                        <TextBox x:Name="ActionSetNameBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                        <TextBlock Text="Action name" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                        <TextBox x:Name="ActionNameBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,12" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                        <TextBlock Text="Allowed extensions (e.g. *.jpg, *.png)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                        <TextBox x:Name="AllowedExtensionsBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                        <TextBlock Text="Required file names (one per line, in output folder)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                        <TextBox x:Name="RequiredFileNamesBox" Style="{StaticResource TextBoxStyle}" AcceptsReturn="True" TextWrapping="Wrap" Height="80" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                        <TextBlock Text="Required files timeout (seconds)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                        <TextBox x:Name="TimeoutBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,12" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                        <TextBlock Text="Pre-step" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                        <ComboBox x:Name="PreStepTypeCombo" Margin="0,0,0,8" SelectionChanged="PreStepTypeCombo_SelectionChanged">
+                                            <ComboBoxItem Content="None" Tag="None"/>
+                                            <ComboBoxItem Content="OpenAI (image analysis)" Tag="OpenAI"/>
+                                        </ComboBox>
+                                        <StackPanel x:Name="PreStepOpenAIPanel" Visibility="Collapsed" Margin="0,0,0,8">
+                                            <TextBlock Text="OpenAI API key (leave blank to use global)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                            <PasswordBox x:Name="PreStepOpenAIKeyBox" Style="{StaticResource PasswordBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                            <TextBlock Text="Custom prompt (optional – leave blank for default: ask for title, description, tags as JSON)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                            <TextBox x:Name="PreStepOpenAIPromptBox" Style="{StaticResource TextBoxStyle}" AcceptsReturn="True" TextWrapping="Wrap" Height="80" Margin="0,0,0,8" VerticalScrollBarVisibility="Auto" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                        </StackPanel>
+                                        <TextBlock Text="Post-step" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                        <ComboBox x:Name="PostStepTypeCombo" Margin="0,0,0,8" SelectionChanged="PostStepTypeCombo_SelectionChanged">
+                                            <ComboBoxItem Content="None (placeholder)" Tag="None"/>
+                                            <ComboBoxItem Content="Shopify" Tag="Shopify"/>
+                                        </ComboBox>
+                                        <StackPanel x:Name="PostStepShopifyPanel" Visibility="Collapsed" Margin="0,0,0,8">
+                                            <TextBlock Text="Store URL (e.g. mystore.myshopify.com)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                            <TextBox x:Name="ShopifyStoreUrlBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                            <TextBlock Text="Access token (leave blank to use global)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                            <PasswordBox x:Name="ShopifyAccessTokenBox" Style="{StaticResource PasswordBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                            <CheckBox x:Name="ShopifyCreateAsDraftCheckBox" Content="Create products as draft" Margin="0,0,0,8"/>
+                                            <TextBlock Text="Default price" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                            <TextBox x:Name="ShopifyDefaultPriceBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                            <TextBlock Text="SKU pattern (e.g. IMG-{filename} or {timestamp})" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                            <TextBox x:Name="ShopifySkuPatternBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                            <TextBlock Text="Variant option name (e.g. Size)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                            <TextBox x:Name="ShopifyVariantOptionNameBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,8" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                            <TextBlock Text="Variant option values (comma-separated, e.g. S, M, L)" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                            <TextBox x:Name="ShopifyVariantOptionValuesBox" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,0" MaxWidth="{StaticResource InputMaxWidth}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </ScrollViewer>
+                </Border>
+            </Border>
         </Grid>
-    </ScrollViewer>
+
+        <Button Grid.Row="2" Content="Save settings" Click="SaveButton_Click" HorizontalAlignment="Left" Style="{StaticResource ButtonStyle}"/>
+    </Grid>
 </UserControl>

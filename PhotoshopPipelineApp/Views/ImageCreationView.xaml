@@ -1,0 +1,235 @@
+<UserControl x:Class="PhotoshopPipelineApp.Views.ImageCreationView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.modernwpf.com/2019"
+             xmlns:views="clr-namespace:PhotoshopPipelineApp.Views">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <views:PathToImageSourceConverter x:Key="PathToImageSourceConverter"/>
+    </UserControl.Resources>
+    <Grid Margin="{StaticResource PagePadding}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Image Creation" FontSize="{StaticResource PageTitleFontSize}" FontWeight="SemiBold" Margin="0,0,0,12"/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320" MinWidth="280"/>
+                <ColumnDefinition Width="140" MinWidth="120"/>
+                <ColumnDefinition Width="*" MinWidth="280"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: prompt input -->
+            <Border Grid.Column="0" Margin="0,0,8,0" Padding="10" CornerRadius="{StaticResource CardCornerRadius}" Background="{StaticResource ZonePanelBackground}" VerticalAlignment="Stretch">
+                <Border Padding="{StaticResource CardPadding}" CornerRadius="{StaticResource CardInnerCornerRadius}" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardBackground}" VerticalAlignment="Top">
+                    <StackPanel>
+                        <TextBlock Text="Prompt" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                        <!-- Prompt container with AI enhance button overlay on top-right -->
+                        <Grid Margin="0,0,0,8">
+                            <TextBox x:Name="PromptBox" Style="{StaticResource TextBoxStyle}" AcceptsReturn="True" TextWrapping="Wrap" Height="120" VerticalScrollBarVisibility="Auto" Padding="8"/>
+                            <Button x:Name="EnhancePromptButton" Click="EnhancePromptButton_Click" Width="26" Height="26" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,4,6,0" Cursor="Hand" Background="Transparent" BorderThickness="0">
+                                <Button.ToolTip>
+                                    <ToolTip>
+                                        <TextBlock Text="AI enhance: rewrite your prompt for better image results (uses GPT-4o-mini)" TextWrapping="Wrap" MaxWidth="220"/>
+                                    </ToolTip>
+                                </Button.ToolTip>
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="border" CornerRadius="6" Padding="0" BorderThickness="1" BorderBrush="#404A90D9">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="#404A90D9" Offset="0"/>
+                                                    <GradientStop Color="#40E84A9E" Offset="0.5"/>
+                                                    <GradientStop Color="#409B59D4" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="border" Property="Opacity" Value="1"/>
+                                                <Setter TargetName="border" Property="Background">
+                                                    <Setter.Value>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                            <GradientStop Color="#804A90D9" Offset="0"/>
+                                                            <GradientStop Color="#80E84A9E" Offset="0.5"/>
+                                                            <GradientStop Color="#809B59D4" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Trigger>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter TargetName="border" Property="Opacity" Value="0.45"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <TextBlock Text="✨" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Button>
+                        </Grid>
+                        <Expander x:Name="AdvancedOptionsExpander" Header="Advanced options" Margin="0,0,0,8" Style="{StaticResource ExpanderStyle}">
+                            <StackPanel Margin="0,8,0,0">
+                                <TextBlock Text="Model" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                <ComboBox x:Name="ModelCombo" Margin="0,0,0,8" MinWidth="120" SelectionChanged="ModelCombo_SelectionChanged">
+                                    <ComboBoxItem Content="GPT Image 1.5 (latest)" Tag="gpt-image-1.5"/>
+                                    <ComboBoxItem Content="DALL-E 3 (best quality)" Tag="dall-e-3"/>
+                                    <ComboBoxItem Content="DALL-E 2 (cost-effective)" Tag="dall-e-2"/>
+                                </ComboBox>
+                                <TextBlock Text="Size" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                <ComboBox x:Name="SizeCombo" Margin="0,0,0,8" MinWidth="120"/>
+                                <TextBlock Text="Quality" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                <ComboBox x:Name="QualityCombo" Margin="0,0,0,8" MinWidth="120"/>
+                                <TextBlock Text="Style" Margin="{StaticResource LabelMargin}" FontSize="{StaticResource BodyFontSize}"/>
+                                <ComboBox x:Name="StyleCombo" Margin="0,0,0,0" MinWidth="120">
+                                    <ComboBoxItem Content="Vivid (dramatic)" Tag="vivid"/>
+                                    <ComboBoxItem Content="Natural" Tag="natural"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </Expander>
+                        <Button x:Name="GenerateButton" Content="Generate" Click="GenerateButton_Click" Style="{StaticResource ButtonStyle}" Margin="0,0,0,8"/>
+                        <ProgressBar x:Name="ProgressBar" IsIndeterminate="True" Height="6" Margin="0,0,0,8" Visibility="Collapsed"/>
+                        <TextBlock x:Name="StatusText" Text="" FontSize="{StaticResource SmallFontSize}" Opacity="0.85" TextWrapping="Wrap" Visibility="Collapsed"/>
+                        <Expander Header="Prompt tips" Margin="0,8,0,0" Style="{StaticResource ExpanderStyle}">
+                            <TextBlock FontSize="{StaticResource SmallFontSize}" Opacity="0.9" TextWrapping="Wrap" LineHeight="18">
+                                <Run Text="• Be specific and detailed; DALL·E 3 works best with descriptive prompts."/>
+                                <LineBreak/>
+                                <Run Text="• Include style: digital art, photorealistic, watercolor, oil painting."/>
+                                <LineBreak/>
+                                <Run Text="• Specify lighting: soft natural lighting, dramatic shadows."/>
+                                <LineBreak/>
+                                <Run Text="• Mention composition: centered, close-up, wide shot."/>
+                                <LineBreak/>
+                                <Run Text="• The API auto-rewrites prompts with GPT-4 for better results."/>
+                            </TextBlock>
+                        </Expander>
+                    </StackPanel>
+                </Border>
+            </Border>
+
+            <!-- Middle: history panel -->
+            <Border Grid.Column="1" Margin="0,0,8,0" Padding="8" CornerRadius="{StaticResource CardCornerRadius}" Background="{StaticResource ZonePanelBackground}" VerticalAlignment="Stretch">
+                <Border Padding="{StaticResource CardPadding}" CornerRadius="{StaticResource CardInnerCornerRadius}" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardBackground}" VerticalAlignment="Stretch">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="History" FontSize="{StaticResource SectionHeaderFontSize}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <ListBox x:Name="HistoryListBox" Grid.Row="1" Background="{StaticResource CardInnerBackground}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" Padding="6,6,16,6"
+                                 SelectionChanged="HistoryListBox_SelectionChanged" MouseDoubleClick="HistoryListBox_MouseDoubleClick">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,4" Padding="4" CornerRadius="4" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardInnerBackground}">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <Border Grid.Row="0" Width="108" Height="72" CornerRadius="4" Background="{StaticResource CardInnerBackground}" Margin="0,0,0,4">
+                                                <Border.Clip>
+                                                    <RectangleGeometry RadiusX="4" RadiusY="4" Rect="0,0,108,72"/>
+                                                </Border.Clip>
+                                                <Image Source="{Binding FilePath, Converter={StaticResource PathToImageSourceConverter}, ConverterParameter=Small}"
+                                                       Stretch="UniformToFill" Width="108" Height="72"/>
+                                            </Border>
+                                            <TextBlock Grid.Row="1" Text="{Binding PromptDisplay}" FontSize="{StaticResource SmallFontSize}" TextTrimming="CharacterEllipsis" TextWrapping="Wrap" MaxHeight="32" Margin="0,0,0,2"/>
+                                            <Grid Grid.Row="2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:g}'}" FontSize="10" Opacity="0.85" VerticalAlignment="Center"/>
+                                                <Button Grid.Column="1" Content="Delete" Padding="6,2" FontSize="10" Click="HistoryDeleteButton_Click" Style="{StaticResource ButtonStyle}"
+                                                        Tag="{Binding}" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+            </Border>
+
+            <!-- Right: image display with zoom -->
+            <Border Grid.Column="2" Padding="10" CornerRadius="{StaticResource CardCornerRadius}" Background="{StaticResource ZonePanelBackground}" VerticalAlignment="Stretch">
+                <Border Padding="{StaticResource CardPadding}" CornerRadius="{StaticResource CardInnerCornerRadius}" BorderThickness="1" BorderBrush="{StaticResource CardBorderBrush}" Background="{StaticResource CardBackground}" VerticalAlignment="Stretch">
+                    <Grid>
+                        <TextBlock x:Name="PlaceholderText" Text="Generated image will appear here" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.6" FontSize="{StaticResource BodyFontSize}"/>
+                        <Grid x:Name="ImageContainer" Visibility="Collapsed">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <ScrollViewer x:Name="ImageScrollViewer" Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Focusable="False">
+                                <Border x:Name="ImageZoomBorder" Background="Transparent" MouseWheel="ImageZoomBorder_MouseWheel"
+                                        PreviewMouseLeftButtonDown="ImageZoomBorder_PreviewMouseLeftButtonDown"
+                                        PreviewMouseMove="ImageZoomBorder_PreviewMouseMove"
+                                        PreviewMouseLeftButtonUp="ImageZoomBorder_PreviewMouseLeftButtonUp">
+                                    <Grid>
+                                        <Image x:Name="ResultImage" Stretch="None">
+                                            <Image.LayoutTransform>
+                                                <ScaleTransform x:Name="ImageScaleTransform" ScaleX="1" ScaleY="1"/>
+                                            </Image.LayoutTransform>
+                                        </Image>
+                                        <Canvas x:Name="CropOverlayCanvas" Visibility="Collapsed" IsHitTestVisible="True"
+                                                HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                                Background="#40000000" ClipToBounds="True"
+                                                PreviewMouseLeftButtonDown="CropOverlay_PreviewMouseLeftButtonDown"
+                                                PreviewMouseMove="CropOverlay_PreviewMouseMove"
+                                                PreviewMouseLeftButtonUp="CropOverlay_PreviewMouseLeftButtonUp">
+                                            <Canvas x:Name="CropDimmingCanvas"/>
+                                            <Border x:Name="CropRectBorder" BorderBrush="#FFFFFF" BorderThickness="2"
+                                                    Background="Transparent" Cursor="SizeAll"
+                                                    PreviewMouseLeftButtonDown="CropRect_PreviewMouseLeftButtonDown">
+                                                <Border.ContextMenu>
+                                                    <ContextMenu>
+                                                        <MenuItem Header="Clear crop" Click="ClearCrop_Click"/>
+                                                    </ContextMenu>
+                                                </Border.ContextMenu>
+                                            </Border>
+                                            <Rectangle x:Name="CropHandleNW" Width="10" Height="10" Fill="#FFFFFF" Cursor="SizeNWSE" Opacity="0.9"/>
+                                            <Rectangle x:Name="CropHandleN" Width="10" Height="10" Fill="#FFFFFF" Cursor="SizeNS" Opacity="0.9"/>
+                                            <Rectangle x:Name="CropHandleNE" Width="10" Height="10" Fill="#FFFFFF" Cursor="SizeNESW" Opacity="0.9"/>
+                                            <Rectangle x:Name="CropHandleE" Width="10" Height="10" Fill="#FFFFFF" Cursor="SizeWE" Opacity="0.9"/>
+                                            <Rectangle x:Name="CropHandleSE" Width="10" Height="10" Fill="#FFFFFF" Cursor="SizeNWSE" Opacity="0.9"/>
+                                            <Rectangle x:Name="CropHandleS" Width="10" Height="10" Fill="#FFFFFF" Cursor="SizeNS" Opacity="0.9"/>
+                                            <Rectangle x:Name="CropHandleSW" Width="10" Height="10" Fill="#FFFFFF" Cursor="SizeNESW" Opacity="0.9"/>
+                                            <Rectangle x:Name="CropHandleW" Width="10" Height="10" Fill="#FFFFFF" Cursor="SizeWE" Opacity="0.9"/>
+                                        </Canvas>
+                                    </Grid>
+                                </Border>
+                            </ScrollViewer>
+                            <StackPanel x:Name="NormalToolbarPanel" Grid.Row="1" Orientation="Horizontal" Margin="0,8,0,0" HorizontalAlignment="Center">
+                                <Button x:Name="ZoomOutButton" Content="-" Width="28" Height="24" Margin="0,0,4,0" Click="ZoomOutButton_Click" Style="{StaticResource ButtonStyle}"/>
+                                <TextBlock x:Name="ZoomLabel" Text="100%" VerticalAlignment="Center" FontSize="{StaticResource SmallFontSize}" MinWidth="40" TextAlignment="Center"/>
+                                <Button x:Name="ZoomInButton" Content="+" Width="28" Height="24" Margin="4,0,8,0" Click="ZoomInButton_Click" Style="{StaticResource ButtonStyle}"/>
+                                <Button x:Name="FitButton" Content="Fit" Height="24" Padding="8,0" Margin="0,0,8,0" Click="FitButton_Click" Style="{StaticResource ButtonStyle}"/>
+                                <Button x:Name="CropButton" Content="Crop" Height="24" Padding="8,0" Margin="0,0,4,0" Click="CropButton_Click" Style="{StaticResource ButtonStyle}" IsEnabled="False"/>
+                                <ComboBox x:Name="CropRatioCombo" Width="70" Height="24" Margin="0,0,8,0" SelectionChanged="CropRatioCombo_SelectionChanged" SelectedIndex="0">
+                                    <ComboBoxItem Content="Free" Tag=""/>
+                                    <ComboBoxItem Content="1:1" Tag="1"/>
+                                    <ComboBoxItem Content="16:9" Tag="1.7778"/>
+                                    <ComboBoxItem Content="4:3" Tag="1.3333"/>
+                                    <ComboBoxItem Content="3:2" Tag="1.5"/>
+                                    <ComboBoxItem Content="9:16" Tag="0.5625"/>
+                                </ComboBox>
+                                <Button x:Name="ClearCropButton" Content="Clear crop" Height="24" Padding="8,0" Margin="0,0,8,0" Click="ClearCropButton_Click" Style="{StaticResource ButtonStyle}" IsEnabled="False"/>
+                                <Button x:Name="ExportButton" Content="Export" Height="24" Padding="8,0" Margin="0,0,4,0" Click="ExportButton_Click" Style="{StaticResource ButtonStyle}" IsEnabled="False"/>
+                                <Button x:Name="SendToQueueButton" Content="Send to Queue" Height="24" Padding="8,0" Click="SendToQueueButton_Click" Style="{StaticResource ButtonStyle}" IsEnabled="False"/>
+                            </StackPanel>
+                            <StackPanel x:Name="CropToolbarPanel" Grid.Row="1" Orientation="Horizontal" Margin="0,8,0,0" HorizontalAlignment="Center" Visibility="Collapsed">
+                                <Button Content="Cancel" Height="24" Padding="8,0" Margin="0,0,8,0" Click="CropCancelButton_Click" Style="{StaticResource ButtonStyle}"/>
+                                <Button Content="OK" Height="24" Padding="8,0" Click="CropOkButton_Click" Style="{StaticResource ButtonStyle}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
